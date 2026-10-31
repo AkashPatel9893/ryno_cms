@@ -25,3 +25,33 @@
 @media(max-width:640px){.mobile-scrim{display:block;position:fixed;inset:0;z-index:25;border:0;background:#17181260}.record-detail>div{grid-template-columns:100px 1fr}.row-actions{gap:9px}}
 .header-right>.workspace-mode{display:inline-flex}
 @media(max-width:640px){.header-right>.workspace-mode{font-size:9px;padding:7px 9px}.header-right{gap:10px}.page-heading>select{min-width:130px}}
+
+/* Phones: each table row becomes a stacked card so no column is clipped off-screen. */
+@media(max-width:640px){
+ .table-scroll{margin:0;overflow:visible}
+ .table-scroll table,.table-scroll tbody{display:block;width:100%}
+ .table-scroll thead{display:none}
+ .table-scroll tr{display:block;border:1px solid var(--line);border-radius:14px;padding:6px 14px;margin-bottom:12px;background:#fff}
+ .table-scroll td{display:block;border-bottom:1px solid var(--line);padding:10px 0;white-space:normal;text-align:left;font-size:13px}
+ .table-scroll td:last-child{border-bottom:0}
+ .table-scroll td::before{content:attr(data-label);display:block;margin-bottom:4px;color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+ .table-scroll td small{display:block}
+ .table-scroll td>*{min-width:0;overflow-wrap:anywhere}
+ .filters select{flex:1 1 calc(50% - 8px);min-width:130px;max-width:none}
+ .filters .button{flex:1 1 100%}
+}
+/* Tablets: keep tables scrollable but never let a cell wrap into a sliver. */
+@media(min-width:641px) and (max-width:1024px){
+ .table-scroll{-webkit-overflow-scrolling:touch}
+ .table-scroll td{white-space:nowrap}
+}
+/* Tablets: collapse the sidebar into the slide-in menu too, so content gets the full width. */
+@media(min-width:641px) and (max-width:900px){
+ .sidebar{transform:translateX(-100%);transition:transform .2s;width:222px;box-shadow:15px 0 35px #0002}
+ .sidebar.open{transform:translateX(0)}
+ .main-shell{margin-left:0}
+ .mobile-toggle{display:block;background:none;border:0;color:var(--ink);padding:0;font-size:18px}
+ .mobile-scrim{display:block;position:fixed;inset:0;z-index:25;border:0;background:#17181260}
+ header{padding:0 20px}
+ main{padding:24px 20px 0}
+}

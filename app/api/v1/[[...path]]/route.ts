@@ -1,8 +1,50 @@
-import { handle } from "@/lib/mock-api/handler";
+const BACKEND_BASE = (process.env.BACKEND_API_URL || "http://localhost:8000").replace(/\/+$/, "");
 
 type Context = { params: Promise<{ path?: string[] }> };
+
 async function route(request: Request, context: Context) {
   const { path = [] } = await context.params;
-  return handle(request, path);
+  const requestUrl = new URL(request.url);
+  const targetUrl = `${BACKEND_BASE}/api/v1/${path.join("/")}${requestUrl.search}`;
+
+  const headers = new Headers(request.headers);
+  headers.delete("host");
+
+  const init: RequestInit = {
+    method: request.method,
+    headers,
+  };
+
+  if (!["GET", "HEAD"].includes(request.method)) {
+    const contentType = request.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const text = await request.text();
+      if (text) init.body = text;
+    } else {
+      init.body = await request.blob();
+    }
+  }
+
+  try {
+    const backendResponse = await fetch(targetUrl, init);
+    const responseHeaders = new Headers(backendResponse.headers);
+    responseHeaders.delete("content-encoding");
+
+    return new Response(backendResponse.body, {
+      status: backendResponse.status,
+      statusText: backendResponse.statusText,
+      headers: responseHeaders,
+    });
+  } catch (err) {
+    return Response.json(
+      {
+        message: `FastAPI backend is offline or unreachable at ${BACKEND_BASE}. Please ensure the backend server is running.`,
+        code: "BACKEND_UNAVAILABLE",
+        error: err instanceof Error ? err.message : String(err),
+      },
+      { status: 503 }
+    );
+  }
 }
+
 export { route as GET, route as POST, route as PATCH, route as PUT, route as DELETE, route as OPTIONS };
