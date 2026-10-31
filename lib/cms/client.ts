@@ -65,6 +65,7 @@ export function setAdminSession(accessToken: string, refreshToken?: string) {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY_TOKEN, accessToken);
   if (refreshToken) localStorage.setItem(STORAGE_KEY_REFRESH, refreshToken);
+  else localStorage.removeItem(STORAGE_KEY_REFRESH);
 }
 
 export function clearAdminSession() {
@@ -108,6 +109,41 @@ export async function loginWithOtp(phone: string, code: string): Promise<string>
 }
 
 let autoLoginPromise: Promise<string | null> | null = null;
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAdminToken(expiredToken: string): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+  const refresh = async () => {
+    // Another request or tab may already have rotated the token while we waited.
+    const current = getAdminToken();
+    if (!current) return null;
+    if (current !== expiredToken) return current;
+    const refreshToken = localStorage.getItem(STORAGE_KEY_REFRESH);
+    if (!refreshToken) return null;
+    const response = await fetch('/api/v1/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+      cache: 'no-store',
+    });
+    if (response.status === 401 || response.status === 403) return null;
+    if (!response.ok) throw new RequestError('Could not renew the session. Please try again.', 'SESSION_REFRESH_FAILED');
+    const data = await response.json();
+    const access = data.access_token ?? data.data?.access_token;
+    const rotated = data.refresh_token ?? data.data?.refresh_token;
+    if (typeof access !== 'string' || typeof rotated !== 'string') {
+      throw new RequestError('Could not renew the session. Please try again.', 'SESSION_REFRESH_FAILED');
+    }
+    // Do not restore a session that was signed out or replaced while the request was in flight.
+    if (getAdminToken() !== expiredToken || localStorage.getItem(STORAGE_KEY_REFRESH) !== refreshToken) return getAdminToken();
+    setAdminSession(access, rotated);
+    return access as string;
+  };
+  refreshPromise = (async () => navigator.locks
+    ? await navigator.locks.request('ryno-admin-session-refresh', refresh)
+    : await refresh())().finally(() => { refreshPromise = null; });
+  return refreshPromise;
+}
 
 /**
  * Dev convenience only: signs in as the seeded admin through the backend's dev OTP lookup. Off unless
@@ -155,21 +191,30 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     token = await ensureAdminToken();
   }
 
-  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-
-  const response = await fetch("/api/v1" + path, {
+  const send = (accessToken: string | null) => fetch("/api/v1" + path, {
     ...options,
     cache: "no-store",
     headers: {
-      ...authHeaders,
       ...(options.body instanceof FormData ? {} : options.body ? { "Content-Type": "application/json" } : {}),
       ...options.headers,
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
   });
 
+  let response = await send(token);
+  if (response.status === 401 && token && typeof window !== "undefined") {
+    const refreshed = await refreshAdminToken(token);
+    if (refreshed) {
+      token = refreshed;
+      response = await send(token);
+    }
+  }
+
   if (response.status === 401 && typeof window !== "undefined") {
-    clearAdminSession();
-    window.dispatchEvent(new CustomEvent("ryno:admin_unauthorized"));
+    if (!token || getAdminToken() === token) {
+      clearAdminSession();
+      window.dispatchEvent(new CustomEvent("ryno:admin_unauthorized"));
+    }
   }
 
   if (!response.ok) {
