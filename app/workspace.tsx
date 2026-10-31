@@ -262,35 +262,10 @@ export default function Workspace({ initialSection = "dashboard" }: { initialSec
   };
 
   useEffect(() => {
+    // An expired or missing session returns to the full-page sign-in (no pop-up, nothing else shown).
     const handleUnauthorized = () => {
       setSignedIn(false);
-      setDialog({
-        id: Date.now(),
-        title: "Admin Sign In",
-        body: <p className="muted">Enter your registered admin phone number to authenticate with the RYNO backend.</p>,
-        fields: [
-          { name: "phone", label: "Admin Phone (E.164)", required: true, value: "" },
-          { name: "code", label: "OTP Code (in dev check /api/v1/dev/otp)", required: true, value: "" },
-        ],
-        submitLabel: "Sign In",
-        secondary: {
-          label: "Send code",
-          run: async (form) => {
-            const phone = String(form.get("phone") || "").trim();
-            if (!phone) throw new Error("Enter your admin phone number first.");
-            await requestAdminOtp(phone);
-          },
-        },
-        submit: async (form) => {
-          const phone = String(form.get("phone") || "");
-          const code = String(form.get("code") || "");
-          await loginWithOtp(phone, code);
-          setSignedIn(true);
-          setRevision((r) => r + 1);
-          setToast("Signed in successfully.");
-          setTimeout(() => setToast(""), 5000);
-        },
-      });
+      setDialog(null);
     };
     window.addEventListener("ryno:admin_unauthorized", handleUnauthorized);
     return () => window.removeEventListener("ryno:admin_unauthorized", handleUnauthorized);
@@ -347,6 +322,19 @@ export default function Workspace({ initialSection = "dashboard" }: { initialSec
     ) : (
       <PaymentsScreen {...{ period, revision, actions }} />
     );
+  // First sign in, then the platform: until there is a session nothing of the workspace is rendered.
+  if (!signedIn) {
+    return (
+      <LoginGate
+        onSignedIn={() => {
+          setSignedIn(true);
+          setRevision((r) => r + 1);
+          setToast("Signed in successfully.");
+          setTimeout(() => setToast(""), 5000);
+        }}
+      />
+    );
+  }
   return (
     <div className="workspace">
       {mobile && <button className="mobile-scrim" aria-label="Close navigation" onClick={() => setMobile(false)} />}
@@ -535,4 +523,104 @@ function labelStatus(value: unknown) {
   return String(value || "")
     .replaceAll("_", " ")
     .toLowerCase();
+}
+
+/** Full-page admin sign-in: phone number, one-time code, then the workspace opens. */
+function LoginGate({ onSignedIn }: { onSignedIn: () => void }) {
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function sendCode() {
+    if (phone.length !== 10) return setError("Enter the 10-digit admin phone number.");
+    setBusy(true);
+    setError("");
+    try {
+      await requestAdminOtp(`+91${phone}`);
+      setSent(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not send the code.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function signIn(event: React.FormEvent) {
+    event.preventDefault();
+    if (!sent) return sendCode();
+    if (!code.trim()) return setError("Enter the code you received.");
+    setBusy(true);
+    setError("");
+    try {
+      await loginWithOtp(`+91${phone}`, code.trim());
+      onSignedIn();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Sign in failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="login-gate">
+      <form className="login-card" onSubmit={signIn}>
+        <Image src="/ryno-logo.png" width={144} height={66} alt="Ryno mobility" priority />
+        <h1>Sign in</h1>
+        <p>Operations workspace · admin access only</p>
+        <label>
+          Admin phone number
+          <span className="phone-field">
+            <span className="phone-prefix">+91</span>
+            <input
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel-national"
+              placeholder="98765 43210"
+              maxLength={10}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+              disabled={sent}
+            />
+          </span>
+        </label>
+        {sent ? (
+          <label>
+            One-time code
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="6-digit code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              autoFocus
+            />
+          </label>
+        ) : null}
+        {error ? (
+          <div className="inline-error" role="alert">
+            {error}
+          </div>
+        ) : null}
+        <button type="submit" className="button primary" disabled={busy}>
+          {busy ? "Please wait…" : sent ? "Sign in" : "Send code"}
+        </button>
+        {sent ? (
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => {
+              setSent(false);
+              setCode("");
+              setError("");
+            }}
+          >
+            Use a different number
+          </button>
+        ) : null}
+      </form>
+    </div>
+  );
 }

@@ -57,3 +57,23 @@
 }
 
 .record-detail .record-detail{margin:0;padding:8px 10px;border:1px solid var(--line,#e7e2da);border-radius:10px;background:#00000005}.record-list{display:grid;gap:8px}
+
+
+
+.login-gate{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:#faf8f5;overflow:auto}
+.login-card{width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px;padding:32px 28px;background:#fff;border:1px solid #e7e2da;border-radius:24px;box-shadow:0 24px 60px #17181a14;text-align:left}
+.login-card img{align-self:center}
+.login-card h1{font-size:26px;margin:4px 0 0}
+.login-card p{margin:0 0 6px;color:#6b6760;font-size:14px}
+.login-card label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+.login-card input{height:46px;padding:0 14px;border:1px solid #d9d3c8;border-radius:12px;font-size:15px;background:#fff}
+.login-card input:focus{outline:2px solid #c44d26;outline-offset:1px}
+.login-card .button{height:48px;margin-top:4px}
+
+.login-card img{background:#17181a;border-radius:16px;padding:10px 16px;width:auto;height:auto;max-width:200px}
+
+.phone-field{display:flex;align-items:stretch;border:1px solid #d9d3c8;border-radius:12px;background:#fff;overflow:hidden}
+.phone-field:focus-within{outline:2px solid #c44d26;outline-offset:1px}
+.phone-prefix{display:flex;align-items:center;padding:0 12px;background:#f3efe8;border-right:1px solid #d9d3c8;font-size:15px;font-weight:700;color:#3a3833}
+.login-card .phone-field input{flex:1;min-width:0;border:0;border-radius:0;outline:0;height:46px}
+/* rebuild 1793450116 */
