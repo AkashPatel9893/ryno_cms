@@ -211,6 +211,8 @@ export default function Workspace({ initialSection = "dashboard" }: { initialSec
   // Read the clock after mount: the current date is not stable across prerender.
   useEffect(() => {
     const next = reportingPeriods();
+    // Deliberate: the date must be read after mount, so this state cannot be derived during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPeriods(next);
     setPeriod({ from: next[2].from, to: next[2].to });
     void ensureAdminToken().then((token) => {
