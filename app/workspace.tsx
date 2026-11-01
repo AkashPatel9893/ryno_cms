@@ -31,7 +31,7 @@ const descriptions: Record<string, string> = {
   Partners: "The people and businesses keeping Bengaluru moving.",
   Analytics: "Explore booking demand, delivered fares and real-time operations.",
   Data: "Bring validated records in. Download traceable CSV snapshots.",
-  Payments: "Wallet balances and payout records with automated batch controls.",
+  Payments: "Review payment totals and reconciliation status.",
 };
 const iconPaths = [
   "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
@@ -388,11 +388,8 @@ export default function Workspace({ initialSection = "dashboard" }: { initialSec
               title: "About this workspace",
               body: (
                 <>
-                  <p>This CMS connects directly to the production RYNO FastAPI backend (/api/v1).</p>
-                  <p>
-                    Orders, partner records, campaigns, analytics and payout jobs are synchronized directly with
-                    PostgreSQL and Redis.
-                  </p>
+                  <p>Use this workspace to manage orders, partners, campaigns, reports and payments.</p>
+                  <p>The connection status at the top of the page shows whether workspace data is available.</p>
                   <a className="text-button" href="http://localhost:8000/docs" target="_blank" rel="noreferrer">
                     Open backend OpenAPI docs ↗
                   </a>
@@ -457,14 +454,14 @@ export default function Workspace({ initialSection = "dashboard" }: { initialSec
                 <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9 M10 21h4" />
               </Icon>
             </button>
-            <span className="avatar" style={{ cursor: "pointer" }} onClick={openAccount}>
+            <button type="button" className="avatar account-button" aria-label="Open admin account" onClick={openAccount}>
               {String(currentUser?.name || "AD")
                 .slice(0, 2)
                 .toUpperCase()}
-            </span>
-            <strong style={{ cursor: "pointer" }} onClick={openAccount}>
+            </button>
+            <button type="button" className="account-name" onClick={openAccount}>
               {String(currentUser?.name || "Admin")}
-            </strong>
+            </button>
           </div>
         </header>
         <main>
@@ -473,7 +470,7 @@ export default function Workspace({ initialSection = "dashboard" }: { initialSec
               <h1>{section}</h1>
               <p>{descriptions[section]}</p>
             </div>
-            <select
+            <label className="period-control"><span>Reporting period</span><select
               aria-label="Reporting period"
               value={period ? period.from + "/" + period.to : ""}
               onChange={(event) => {
@@ -486,7 +483,7 @@ export default function Workspace({ initialSection = "dashboard" }: { initialSec
                   {p.label}
                 </option>
               ))}
-            </select>
+            </select></label>
           </div>
           {context.error && (
             <div className="notice" role="alert">

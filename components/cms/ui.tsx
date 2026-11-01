@@ -33,4 +33,4 @@ function detailValue(key:string,value:unknown):React.ReactNode{
   if(typeof value==="object")return <RecordDetail record={value}/>;
   return String(value);
 }
-export function RecordDetail({record}:{record:unknown}){if(record==null)return <p className="muted">No record details available.</p>;if(typeof record!=="object")return <p>{String(record)}</p>;return <dl className="record-detail">{Object.entries(record).filter(([,value])=>value!==undefined).map(([key,value])=><div key={key}><dt>{key.replaceAll("_"," ")}</dt><dd>{detailValue(key,value)}</dd></div>)}</dl>}
+export function RecordDetail({record}:{record:unknown}){if(record==null)return <p className="muted">No record details available.</p>;if(typeof record!=="object")return <p>{String(record)}</p>;return <dl className="record-detail">{Object.entries(record).filter(([,value])=>value!==undefined).map(([key,value])=><div key={key} className={value!==null&&typeof value==="object"?"record-group":undefined}><dt>{key.replaceAll("_"," ")}</dt><dd>{detailValue(key,value)}</dd></div>)}</dl>}
