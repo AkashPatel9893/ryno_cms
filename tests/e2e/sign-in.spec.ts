@@ -62,6 +62,24 @@ test("requests an OTP, signs in, and signs out", async ({ page }) => {
   await expect(
     page.getByRole("button", { name: "Open admin account" }),
   ).toBeVisible();
+  await page.evaluate(() => {
+    const state = window as typeof window & { sessionFlashed?: boolean };
+    state.sessionFlashed = false;
+    new MutationObserver(() => {
+      if (document.body.textContent?.includes("Checking your session…"))
+        state.sessionFlashed = true;
+    }).observe(document.body, { childList: true, subtree: true });
+  });
+  await page.getByRole("link", { name: "Orders", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Orders", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () =>
+        (window as typeof window & { sessionFlashed?: boolean }).sessionFlashed,
+    ),
+  ).toBe(false);
   const account = page.getByRole("button", { name: "Open admin account" });
   await account.click();
   await expect(page.getByRole("menu")).toContainText("Test Admin");

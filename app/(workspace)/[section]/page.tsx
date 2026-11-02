@@ -1,4 +1,3 @@
-import Workspace from "@/components/cms/workspace";
 import { notFound } from "next/navigation";
 import { sections } from "@/components/cms/navigation";
 export function generateStaticParams() {
@@ -11,5 +10,5 @@ export default async function Page({
 }) {
   const { section } = await params;
   if (!sections.some((name) => name.toLowerCase() === section)) notFound();
-  return <Workspace key={section} initialSection={section} />;
+  return null;
 }

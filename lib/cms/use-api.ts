@@ -10,7 +10,7 @@ export function useApi<T>(paths: string[], revision = 0, enabled = true) {
       Promise.all(paths.map((path) => api(path, { signal }))) as Promise<T>,
     retry: false,
     refetchOnWindowFocus: false,
-    gcTime: 0,
+    gcTime: 5 * 60_000,
   });
   return {
     data: result.data ?? null,

@@ -48,17 +48,23 @@ export function PartnersScreen({ period, revision, actions }: ScreenProps) {
     "brands",
     "brand-campaigns",
   ];
-  const state = useApi<
-    [Aggregate<Record<string, number>>, Page<Row>, Page<Row>]
-  >(
+  const summary = useApi<[Aggregate<Record<string, number>>]>(
+    [`/admin/partners/summary?${query(period)}`],
+    revision,
+  );
+  const list = useApi<[Page<Row>]>(
     [
-      `/admin/partners/summary?${query(period)}`,
       `/admin/${paths[tab]}?${query(period, { q: search, cursor, limit: "7" })}`,
-      "/admin/driver-invitations?limit=10",
     ],
     revision,
   );
-  const data = state.data;
+  const invitations = useApi<[Page<Row>]>(
+    ["/admin/driver-invitations?limit=10"],
+    revision,
+  );
+  const summaryData = summary.data?.[0];
+  const rows = list.data?.[0];
+  const invitationRows = invitations.data?.[0];
   const invite = () =>
     actions.dialog({
       title: "Invite a rider",
@@ -84,27 +90,27 @@ export function PartnersScreen({ period, revision, actions }: ScreenProps) {
     });
   return (
     <>
-      {data && (
+      {summaryData && (
         <Stats
           items={[
             {
               label: "Registered riders",
-              value: number(data[0].data.registered_riders),
-              note: `${number(data[0].data.online_riders)} online · ${number(data[0].data.on_delivery_riders)} on delivery`,
+              value: number(summaryData.data.registered_riders),
+              note: `${number(summaryData.data.online_riders)} online · ${number(summaryData.data.on_delivery_riders)} on delivery`,
             },
             {
               label: "Registered customers",
-              value: number(data[0].data.registered_customers),
+              value: number(summaryData.data.registered_customers),
               note: "Actual registry count",
             },
             {
               label: "Live B2B accounts",
-              value: number(data[0].data.live_b2b_partners),
+              value: number(summaryData.data.live_b2b_partners),
               note: "Active accounts with orders in the selected period",
             },
             {
               label: "Advertising brands",
-              value: number(data[0].data.advertising_brands),
+              value: number(summaryData.data.advertising_brands),
               note: "Campaign advertisers",
             },
           ]}
@@ -165,7 +171,7 @@ export function PartnersScreen({ period, revision, actions }: ScreenProps) {
               }}
             />
           </div>
-          {data ? (
+          {rows ? (
             <>
               <Table
                 heads={
@@ -205,7 +211,7 @@ export function PartnersScreen({ period, revision, actions }: ScreenProps) {
                               "Action",
                             ]
                 }
-                rows={data[1].items.map((r) => {
+                rows={rows.items.map((r) => {
                   const view = (
                     <TextButton
                       key="v"
@@ -315,15 +321,15 @@ export function PartnersScreen({ period, revision, actions }: ScreenProps) {
                 })}
               />
               <Pager
-                count={data[1].total_count}
+                count={rows.total_count}
                 cursor={cursor}
-                next={data[1].next_cursor}
+                next={rows.next_cursor}
                 onNext={(next) => setCursors([...cursors, next])}
                 onPrevious={() => setCursors(cursors.slice(0, -1))}
               />
             </>
           ) : (
-            <LoadState error={state.error} retry={actions.refresh} />
+            <LoadState error={list.error} retry={actions.refresh} />
           )}
         </Panel>
       )}
@@ -347,14 +353,14 @@ export function PartnersScreen({ period, revision, actions }: ScreenProps) {
           onReview={(id, name) => setReviewDriver({ id, name })}
         />
       )}
-      {tab === 0 && riderView === 0 && data && (
+      {tab === 0 && riderView === 0 && invitationRows && (
         <Panel
           title="Pending rider invitations"
           sub="An invitation does not create an approved driver or send a real message"
         >
           <Table
             heads={["Name", "Contact", "Status"]}
-            rows={data[2].items.map((r) => [
+            rows={invitationRows.items.map((r) => [
               String(r.name),
               String(r.phone_masked),
               <Badge key="b">{label(r.status)}</Badge>,

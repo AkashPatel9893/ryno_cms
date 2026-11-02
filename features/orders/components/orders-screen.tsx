@@ -50,9 +50,14 @@ export function OrdersScreen({ period, revision, actions }: ScreenProps) {
     customer_type: business,
     payment_timing: timing,
   };
-  const state = useApi<
+  const orders = useApi<[Page<Order>]>(
     [
-      Page<Order>,
+      `/admin/order-register?${query(period, { ...filters, status_group: orderGroups[tab], cursor, limit: "7" })}`,
+    ],
+    revision,
+  );
+  const summary = useApi<
+    [
       {
         total_count: number;
         counts_by_group: Record<string, number>;
@@ -62,16 +67,10 @@ export function OrdersScreen({ period, revision, actions }: ScreenProps) {
         cancellation_rate_percent: number | null;
       },
     ]
-  >(
-    [
-      `/admin/order-register?${query(period, { ...filters, status_group: orderGroups[tab], cursor, limit: "7" })}`,
-      `/admin/order-register/summary?${query(period, filters)}`,
-    ],
-    revision,
-  );
+  >([`/admin/order-register/summary?${query(period, filters)}`], revision);
   const reset = () => setCursors([""]);
-  const rows = state.data?.[0],
-    counts = state.data?.[1];
+  const rows = orders.data?.[0],
+    counts = summary.data?.[0];
   function openOrder(order: Order) {
     actions.inspect(order.order_number, `/admin/orders/${order.id}`);
   }
@@ -270,7 +269,7 @@ export function OrdersScreen({ period, revision, actions }: ScreenProps) {
             />
           </>
         ) : (
-          <LoadState error={state.error} retry={actions.refresh} />
+          <LoadState error={orders.error} retry={actions.refresh} />
         )}
       </Panel>
       <p className="muted">

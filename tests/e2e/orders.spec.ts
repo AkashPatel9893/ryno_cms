@@ -105,6 +105,21 @@ test("filters orders and exports the matching selection", async ({ page }) => {
     from_date: "2026-05-01",
     to_date: "2026-05-31",
   });
+  await page.evaluate(() => {
+    (window as typeof window & { savedHeader?: Element | null }).savedHeader =
+      document.querySelector(".main-shell > header");
+  });
+  await page.getByRole("link", { name: "Reports", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Reports", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () =>
+        (window as typeof window & { savedHeader?: Element | null })
+          .savedHeader === document.querySelector(".main-shell > header"),
+    ),
+  ).toBe(true);
 });
 
 test("reporting calendar fits and remains usable on a narrow screen", async ({

@@ -55,9 +55,9 @@ export default function Workspace({
     revision,
     period,
     signedIn,
+    sessionChecked,
   } = useAppSelector((state) => state.workspace);
   const [toast, setToast] = useState("");
-  const [sessionChecked, setSessionChecked] = useState(false);
   const setMobile = (open: boolean) => dispatch(setMobileNavigationOpen(open));
   const [periods, setPeriods] = useState<ReturnType<typeof reportingPeriods>>(
     [],
@@ -83,6 +83,7 @@ export default function Workspace({
     dispatch(
       initializeReportingPeriod({ from: monthToDate.from, to: monthToDate.to }),
     );
+    if (sessionChecked) return;
     let active = true;
     void ensureAdminToken()
       .then((token) => {
@@ -90,14 +91,11 @@ export default function Workspace({
       })
       .catch(() => {
         if (active) dispatch(setSignedIn(false));
-      })
-      .finally(() => {
-        if (active) setSessionChecked(true);
       });
     return () => {
       active = false;
     };
-  }, [dispatch]);
+  }, [dispatch, sessionChecked]);
   const [dialog, setDialog] = useState<(Dialog & { id: number }) | null>(null);
   const context = useApi<
     [{ user: Row; server_time: string; markets: Row[]; roles?: string[] }]
@@ -299,11 +297,7 @@ export default function Workspace({
               </button>
             </div>
           )}
-          <motion.div
-            key={section}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <motion.div key={section} initial={{ y: 3 }} animate={{ y: 0 }}>
             {screen}
           </motion.div>
           <footer>

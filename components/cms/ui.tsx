@@ -1,7 +1,6 @@
 "use client";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { Spinner } from "@/components/ui/spinner";
 import { Button as BaseButton } from "@/components/ui/button";
 import {
   Table as BaseTable,
@@ -208,36 +207,7 @@ export function Pager({
     </div>
   );
 }
-export function LoadState({
-  error,
-  retry,
-}: {
-  error?: string | null;
-  retry: () => void;
-}) {
-  return (
-    <section className="panel" aria-live="polite">
-      <h2 className="flex items-center gap-2">
-        {!error && <Spinner className="text-[#d64a16]" />}
-        {error
-          ? error === "Not Found"
-            ? "Not available yet"
-            : "Could not load this section"
-          : "Loading workspace…"}
-      </h2>
-      <p className="muted">
-        {error === "Not Found"
-          ? "This section needs backend endpoints that are not deployed yet. The rest of the workspace is unaffected."
-          : error || "Fetching records from backend."}
-      </p>
-      {error && (
-        <div className="actions">
-          <Button onClick={retry}>Try again</Button>
-        </div>
-      )}
-    </section>
-  );
-}
+export { LoadState } from "@/components/cms/loading-state";
 export function Chart({ points }: { points: Point[] }) {
   const max = Math.max(...points.map((p) => Number(p.amount)), 1);
   const total = points.reduce((n, p) => n + Number(p.amount), 0);
