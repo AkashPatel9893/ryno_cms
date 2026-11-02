@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 
+import { Spinner } from "@/components/ui/spinner";
 import { Bell, BellOff, RefreshCw } from "lucide-react";
 import { Popover } from "radix-ui";
 import { dateTime } from "@/lib/cms/format";
@@ -70,8 +71,11 @@ export function AlertsPopover({
               aria-live="polite"
             >
               {loading && !alerts ? (
-                <p className="px-5 py-8 text-center text-sm text-[#777f78]">
-                  Loading alerts…
+                <p
+                  className="flex items-center justify-center gap-2 px-5 py-8 text-sm text-[#777f78]"
+                  role="status"
+                >
+                  <Spinner /> Loading alerts…
                 </p>
               ) : error ? (
                 <p className="px-5 py-8 text-center text-sm text-[#a83910]">

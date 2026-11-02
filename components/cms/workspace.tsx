@@ -40,6 +40,7 @@ import {
   setSignedIn,
 } from "@/lib/store/workspace-slice";
 import { RecordDetail } from "@/components/cms/ui";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function Workspace({
   initialSection = "dashboard",
@@ -120,7 +121,15 @@ export default function Workspace({
     refresh: () => dispatch(refreshWorkspace()),
     inspect: (title, path) => {
       const id = Date.now();
-      setDialog({ id, title, body: <p className="muted">Loading record…</p> });
+      setDialog({
+        id,
+        title,
+        body: (
+          <p className="muted flex items-center gap-2" role="status">
+            <Spinner /> Loading record…
+          </p>
+        ),
+      });
       api(path)
         .then((record) =>
           setDialog((current) =>
@@ -190,9 +199,14 @@ export default function Workspace({
         role="status"
         aria-live="polite"
       >
-        <span className="text-sm font-medium text-[#747168]">
-          Checking your session…
-        </span>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ffebe1] text-[#d64a16]">
+            <Spinner className="h-6 w-6" />
+          </span>
+          <span className="text-sm font-medium text-[#747168]">
+            Checking your session…
+          </span>
+        </div>
       </div>
     );
   }

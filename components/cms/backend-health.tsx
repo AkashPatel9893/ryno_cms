@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 
 import { useQuery } from "@tanstack/react-query";
+import { Spinner } from "@/components/ui/spinner";
 import { Activity, RefreshCw } from "lucide-react";
 import { Popover } from "radix-ui";
 
@@ -103,7 +104,11 @@ export function BackendHealth() {
               disabled={health.isFetching}
               className="mt-4 inline-flex items-center gap-2 rounded-lg border border-[#e5e7e2] px-3 py-2 text-xs font-semibold hover:bg-[#f5f5f2] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-orange-600"
             >
-              <RefreshCw size={14} aria-hidden="true" />
+              {health.isFetching ? (
+                <Spinner className="h-3.5 w-3.5" />
+              ) : (
+                <RefreshCw size={14} aria-hidden="true" />
+              )}
               {health.isFetching ? "Checking…" : "Refresh status"}
             </button>
           </motion.div>

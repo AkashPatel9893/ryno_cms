@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { loginWithOtp, requestAdminOtp } from "@/lib/cms/auth";
 
 const phoneSchema = z.object({
@@ -147,6 +148,7 @@ export function LoginGate({ onSignedIn }: { onSignedIn: () => void }) {
                 className="login-submit"
                 disabled={isSubmitting}
               >
+                {isSubmitting && <Spinner />}
                 {isSubmitting ? "Please wait…" : sent ? "Sign in" : "Send code"}
                 {!isSubmitting && <ArrowRight size={17} aria-hidden="true" />}
               </Button>

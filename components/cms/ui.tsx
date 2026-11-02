@@ -1,6 +1,7 @@
 "use client";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { Spinner } from "@/components/ui/spinner";
 import { Button as BaseButton } from "@/components/ui/button";
 import {
   Table as BaseTable,
@@ -216,7 +217,8 @@ export function LoadState({
 }) {
   return (
     <section className="panel" aria-live="polite">
-      <h2>
+      <h2 className="flex items-center gap-2">
+        {!error && <Spinner className="text-[#d64a16]" />}
         {error
           ? error === "Not Found"
             ? "Not available yet"
