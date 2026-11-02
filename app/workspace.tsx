@@ -70,6 +70,8 @@ function Modal({ value, onClose }: { value: Dialog; onClose: () => void }) {
     const opener = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
     dialog?.showModal();
+    // showModal focuses the × button first; the operator is here to fill in the form.
+    dialog?.querySelector<HTMLElement>("form input, form select")?.focus();
     document.body.style.overflow = "hidden";
     return () => {
       dialog?.close();
