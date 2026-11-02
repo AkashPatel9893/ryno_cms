@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import "./globals.css";
+import "./theme.css";
+import { ThemeProvider } from "@/components/cms/theme-provider";
 import { StoreProvider } from "@/components/cms/store-provider";
 import { QueryProvider } from "@/components/cms/query-provider";
 export const metadata: Metadata = {
@@ -14,13 +16,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <Suspense fallback={null}>
-          <StoreProvider>
-            <QueryProvider>{children}</QueryProvider>
-          </StoreProvider>
-        </Suspense>
+        <ThemeProvider>
+          <Suspense fallback={null}>
+            <StoreProvider>
+              <QueryProvider>{children}</QueryProvider>
+            </StoreProvider>
+          </Suspense>
+        </ThemeProvider>
       </body>
     </html>
   );

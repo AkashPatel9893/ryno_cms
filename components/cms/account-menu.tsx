@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 
 import { ChevronDown, LogOut } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
+import { ThemeOptions } from "@/components/cms/theme-options";
 import type { Row } from "@/lib/cms/types";
 
 type AccountMenuProps = {
@@ -42,11 +43,11 @@ export function AccountMenu({ user, roles, onSignOut }: AccountMenuProps) {
       <DropdownMenu.Trigger asChild>
         <button
           type="button"
-          className="group inline-flex items-center gap-2 rounded-xl border border-[#e9ebe6] bg-white py-1 pr-2.5 pl-1 text-left text-[#202a24] transition-colors hover:border-[#dedfd8] hover:bg-[#f8f8f5] data-[state=open]:border-[#f0cbbb] data-[state=open]:bg-[#fff8f4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+          className="group inline-flex items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] py-1 pr-2.5 pl-1 text-left text-[var(--ink)] transition-colors hover:border-[#dedfd8] hover:bg-[var(--surface-hover)] data-[state=open]:border-[#f0cbbb] data-[state=open]:bg-[var(--surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
           aria-label="Open admin account"
         >
           <span
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#ffebe1] text-xs font-bold text-[#b84013]"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-xs font-bold text-[var(--accent-text)]"
             aria-hidden="true"
           >
             {initials}
@@ -55,12 +56,12 @@ export function AccountMenu({ user, roles, onSignOut }: AccountMenuProps) {
             <span className="truncate text-xs font-semibold leading-tight">
               {name}
             </span>
-            <span className="truncate text-[10px] leading-tight text-[#7a827b]">
+            <span className="truncate text-[10px] leading-tight text-[var(--muted)]">
               {roleLabel}
             </span>
           </span>
           <ChevronDown
-            className="text-[#818981] transition-transform group-data-[state=open]:rotate-180"
+            className="text-[var(--muted)] transition-transform group-data-[state=open]:rotate-180"
             size={14}
             aria-hidden="true"
           />
@@ -113,6 +114,7 @@ export function AccountMenu({ user, roles, onSignOut }: AccountMenuProps) {
                 )}
               </div>
             )}
+            <ThemeOptions />
             <DropdownMenu.Separator className="account-menu-separator" />
             <DropdownMenu.Item
               className="account-menu-signout"

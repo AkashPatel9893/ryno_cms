@@ -58,7 +58,7 @@ export function BackendHealth() {
         <button
           type="button"
           aria-label={`Backend health: ${label}`}
-          className="inline-flex items-center gap-2 rounded-full border border-[#e5e7e2] bg-white px-3 py-2 text-xs font-medium text-[#4c5650] hover:bg-[#f7f8f5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-xs font-medium text-[var(--ink)] hover:bg-[var(--surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
         >
           <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden="true" />
           <span className="hidden sm:inline">Backend {label}</span>
@@ -72,24 +72,24 @@ export function BackendHealth() {
           sideOffset={10}
           collisionPadding={12}
           aria-label="Backend health"
-          className="z-[100] w-[280px] max-w-[calc(100vw-24px)] rounded-2xl border border-[#e5e7e2] bg-white p-4 text-[#20251f] shadow-[0_16px_44px_#17181224,0_2px_8px_#1718120a] outline-none"
+          className="z-[100] w-[280px] max-w-[calc(100vw-24px)] rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[var(--ink)] shadow-[0_16px_44px_#17181224,0_2px_8px_#1718120a] outline-none"
         >
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f4f5f2] text-[#647067]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--surface-subtle)] text-[var(--muted)]">
                 <Activity size={18} aria-hidden="true" />
               </span>
               <div>
                 <h2 className="text-sm font-semibold">Backend health</h2>
-                <p className="mt-1 text-xs text-[#777f78]" role="status">
+                <p className="mt-1 text-xs text-[var(--muted)]" role="status">
                   {label}
                 </p>
               </div>
             </div>
-            <p className="mt-3 text-xs leading-5 text-[#777f78]">
+            <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
               {status === "healthy"
                 ? "Backend, database and Redis are ready."
                 : status === "degraded"
@@ -102,7 +102,7 @@ export function BackendHealth() {
               type="button"
               onClick={() => void health.refetch()}
               disabled={health.isFetching}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-[#e5e7e2] px-3 py-2 text-xs font-semibold hover:bg-[#f5f5f2] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-orange-600"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-[var(--line)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface-hover)] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-orange-600"
             >
               {health.isFetching ? (
                 <Spinner className="h-3.5 w-3.5" />

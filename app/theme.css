@@ -1,0 +1,190 @@
+:root {
+  --surface: #ffffff;
+  --surface-subtle: #f5f7f4;
+  --surface-hover: #f1f3ef;
+  --accent-soft: #ffebe1;
+  --accent-text: #a83910;
+  --skeleton: #eceee9;
+  --background: #f6f7f5;
+  --foreground: #1e2924;
+  --border: #e4e7e2;
+  --input: #e4e7e2;
+  --ring: #c44d26;
+}
+html.dark {
+  color-scheme: dark;
+  --canvas: #121714;
+  --surface: #1d2520;
+  --surface-subtle: #252f28;
+  --surface-hover: #303b33;
+  --ink: #edf2ec;
+  --muted: #a9b5aa;
+  --line: #39463d;
+  --soft: #303b33;
+  --peach: #573426;
+  --accent-soft: #573426;
+  --accent-text: #ffb08d;
+  --skeleton: #354139;
+  --background: #121714;
+  --foreground: #edf2ec;
+  --border: #39463d;
+  --input: #39463d;
+  --ring: #ff9c70;
+}
+.theme-menu-label {
+  padding: 8px 12px 5px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+.theme-menu-options {
+  padding: 0 4px 5px;
+}
+.theme-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px;
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+.theme-menu-item[data-highlighted] {
+  background: var(--surface-hover);
+}
+.theme-menu-check {
+  display: flex;
+  margin-left: auto;
+  color: var(--accent-text);
+}
+html.dark header {
+  background: #18211bf7;
+}
+html.dark .breadcrumb strong,
+html.dark td {
+  color: var(--ink);
+}
+html.dark .panel,
+html.dark .stat:not(.dark),
+html.dark .mini-stats > div,
+html.dark .modal,
+html.dark .modal > .panel-heading,
+html.dark .account-menu,
+html.dark .period-popover,
+html.dark .period-trigger,
+html.dark .period-clear,
+html.dark .button:not(.primary),
+html.dark input,
+html.dark select {
+  background-color: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html.dark .button:not(.primary):hover,
+html.dark .period-clear:hover,
+html.dark .period-preset:hover,
+html.dark .period-calendar .rdp-day_button:hover,
+html.dark tbody tr:hover {
+  background-color: var(--surface-hover);
+}
+html.dark th,
+html.dark .record-detail .record-detail,
+html.dark .section-subnav .tabs {
+  background: var(--surface-subtle);
+}
+html.dark .section-subnav .tabs button.selected {
+  background: var(--surface-hover);
+  color: var(--accent-text);
+}
+html.dark .text-button,
+html.dark .legend span:first-child,
+html.dark .spotlight small,
+html.dark .tabs button.selected,
+html.dark .period-row .tabs button.selected,
+html.dark .period-trigger > svg:first-child {
+  color: var(--accent-text);
+}
+html.dark .badge {
+  color: #c1cdc2;
+}
+html.dark .badge.orange {
+  color: var(--accent-text);
+}
+html.dark .period-preset[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+html.dark .period-calendar .rdp-root {
+  --rdp-accent-color: #e56b38;
+  --rdp-accent-background-color: #56392d;
+}
+html.dark .period-calendar .rdp-range_start .rdp-day_button,
+html.dark .period-calendar .rdp-range_end .rdp-day_button {
+  color: #fff;
+}
+html.dark select:not([multiple]):not([size]) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23edf2ec' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+html.dark .inline-error,
+html.dark .period-error {
+  color: #ffae93;
+}
+html.dark .account-menu-signout {
+  color: #ffae93;
+}
+html.dark .account-menu-signout[data-highlighted] {
+  background: var(--accent-soft);
+}
+html.dark .account-menu-avatar {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+html.dark .login-gate {
+  background: var(--canvas);
+}
+html.dark .login-shell {
+  background: var(--surface);
+  border-color: var(--line);
+}
+html.dark .login-card label,
+html.dark .phone-prefix {
+  color: var(--ink);
+}
+html.dark .login-intro p,
+html.dark .login-access-note,
+html.dark .login-main-footer {
+  color: var(--muted);
+}
+html.dark .login-intro-icon {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+html.dark .login-eyebrow {
+  color: var(--accent-text);
+}
+html.dark .phone-field {
+  background: var(--surface);
+  border-color: var(--line);
+}
+html.dark .phone-prefix {
+  background: var(--surface-subtle);
+  border-color: var(--line);
+}
+html.dark .login-card input {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+@media (max-width: 760px) {
+  html.dark .login-gate {
+    background: var(--surface);
+  }
+}
+
+@media (max-width: 640px) {
+  html.dark .table-scroll tr {
+    background: var(--surface);
+  }
+}

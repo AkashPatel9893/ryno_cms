@@ -186,15 +186,15 @@ export default function Workspace({
   if (!sessionChecked) {
     return (
       <div
-        className="flex min-h-screen items-center justify-center bg-[#faf8f4] px-6"
+        className="flex min-h-screen items-center justify-center bg-[var(--canvas)] px-6"
         role="status"
         aria-live="polite"
       >
         <div className="flex flex-col items-center gap-4 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ffebe1] text-[#d64a16]">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent-text)]">
             <Spinner className="h-6 w-6" />
           </span>
-          <span className="text-sm font-medium text-[#747168]">
+          <span className="text-sm font-medium text-[var(--muted)]">
             Checking your session…
           </span>
         </div>
