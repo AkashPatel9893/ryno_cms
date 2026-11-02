@@ -1,40 +1,9 @@
+import { seedOrders } from "@/lib/mock-api/order-fixtures";
 export const SNAPSHOT = "2026-10-14T09:00:00Z";
 export const MARKET_ID = "11111111-1111-4111-8111-111111111111";
 export const TOKEN = "mock-admin-token";
-export type Row = { id: string; [key: string]: unknown };
-export type Order = {
-  id: string;
-  order_number: string;
-  market_id: string;
-  status: string;
-  status_group: string;
-  created_at: string;
-  completed_at: string | null;
-  customer: {
-    id: string;
-    customer_number: string;
-    display_name: string;
-    customer_type: string;
-    phone_masked: string;
-  };
-  route: { pickup_label: string; drop_label: string; stop_count: number };
-  vehicle_type: { id: string; code: string; name: string };
-  fare: {
-    quoted_amount: string;
-    final_amount: string | null;
-    currency: string;
-  };
-  payment: {
-    payment_id: string;
-    method: string;
-    timing: string;
-    status: string;
-    gateway_status: string;
-    paid_at: string | null;
-    refunded_amount: string;
-  };
-  assigned_driver_id: string | null;
-};
+import type { Order, Row } from "@/lib/mock-api/types";
+export type { Order, Row } from "@/lib/mock-api/types";
 export function id(n: number, family = 2) {
   return `${String(family).padStart(8, "0")}-0000-4000-8000-${String(n).padStart(12, "0")}`;
 }
@@ -169,129 +138,6 @@ export const seedDrivers: Row[] = Array.from({ length: 96 }, (_, i) => ({
   rating_count: null,
   created_at: "2026-09-01T04:30:00Z",
 }));
-function makeOrder(
-  n: number,
-  status: string,
-  day: number,
-  customerIndex: number,
-  amount: number,
-): Order {
-  const c = seedCustomers[customerIndex];
-  const delivered = status === "DELIVERED";
-  const method = ["UPI", "CARD", "CASH"][n % 3];
-  const refunded = status === "CANCELLED" && method !== "CASH";
-  const paid = status !== "CANCELLED" && (method !== "CASH" || delivered);
-  const created = `2026-10-${String(day).padStart(2, "0")}T${String(4 + (n % 4)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}:00Z`;
-  return {
-    id: id(n),
-    order_number: `RY-${10483 - n}`,
-    market_id: MARKET_ID,
-    status,
-    status_group: groups[status],
-    created_at: created,
-    completed_at: delivered ? created : null,
-    customer: {
-      id: c.id,
-      customer_number: String(c.customer_number),
-      display_name: String(c.display_name),
-      customer_type: String(c.customer_type),
-      phone_masked: String(c.phone_masked),
-    },
-    route: {
-      pickup_label: [
-        "Indiranagar",
-        "Whitefield",
-        "Jayanagar",
-        "HSR Layout",
-        "Koramangala",
-      ][n % 5],
-      drop_label: [
-        "Koramangala",
-        "HSR Layout",
-        "JP Nagar",
-        "MG Road",
-        "Bellandur",
-      ][n % 5],
-      stop_count: 2,
-    },
-    vehicle_type: {
-      id: id(n % 3 === 1 ? 2 : 1, 4),
-      code: n % 3 === 1 ? "TATA_ACE" : "BIKE",
-      name: n % 3 === 1 ? "Mini truck" : "2 Wheeler",
-    },
-    fare: {
-      quoted_amount: amount.toFixed(2),
-      final_amount: delivered ? amount.toFixed(2) : null,
-      currency: "INR",
-    },
-    payment: {
-      payment_id: id(n, 7),
-      method,
-      timing: method === "CASH" ? "POST_DELIVERY" : "PRE_DISPATCH",
-      status: paid || refunded ? "PAID" : "PENDING",
-      gateway_status: refunded
-        ? "REFUNDED"
-        : status === "CANCELLED"
-          ? "CANCELLED"
-          : paid
-            ? "SUCCESS"
-            : "PENDING",
-      paid_at: paid || refunded ? created : null,
-      refunded_amount: refunded ? amount.toFixed(2) : "0.00",
-    },
-    assigned_driver_id: ["SEARCHING_DRIVER", "CANCELLED"].includes(status)
-      ? null
-      : id((n % 3) + 1, 5),
-  };
-}
-function seedOrders(): Order[] {
-  const first = [
-    "DELIVERED",
-    "PICKED_UP",
-    "DRIVER_ASSIGNED",
-    "SEARCHING_DRIVER",
-    "CANCELLED",
-    "DELIVERED",
-    "DELIVERED",
-  ].map((s, i) =>
-    makeOrder(i + 1, s, 14, i, [280, 640, 220, 420, 180, 760, 240][i]),
-  );
-  const quotas: [[string, number][], number][] = [
-    [
-      [
-        ["DELIVERED", 797],
-        ["PICKED_UP", 63],
-        ["DRIVER_ASSIGNED", 39],
-        ["SEARCHING_DRIVER", 23],
-        ["CANCELLED", 31],
-      ],
-      14,
-    ],
-    [
-      [
-        ["DELIVERED", 10400],
-        ["PICKED_UP", 256],
-        ["DRIVER_ASSIGNED", 240],
-        ["SEARCHING_DRIVER", 176],
-        ["CANCELLED", 448],
-      ],
-      0,
-    ],
-  ];
-  let discountIndex = 0;
-  for (const [entries, day] of quotas)
-    for (const [status, count] of entries)
-      for (let i = 0; i < count; i++) {
-        const n = first.length + 1;
-        let amount = 255;
-        if (day === 14 && status === "DELIVERED" && discountIndex < 3)
-          amount -= [172, 172, 171][discountIndex++];
-        const order = makeOrder(n, status, day || 1 + (i % 13), n % 7, amount);
-        if (n > 10475) order.order_number = `RY-ARCH-${n}`;
-        first.push(order);
-      }
-  return first;
-}
 const campaignNames = [
   "October delivery boost",
   "Made for your business",
@@ -331,7 +177,7 @@ export type Store = {
 };
 function createStore(): Store {
   return {
-    orders: seedOrders(),
+    orders: seedOrders({ seedCustomers, id, MARKET_ID, groups }),
     customers: structuredClone(seedCustomers),
     drivers: structuredClone(seedDrivers),
     campaigns: campaignNames.map((title, i) => ({
