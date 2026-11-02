@@ -46,4 +46,22 @@ test("supports system, light and dark appearance and remembers selection", async
     page.getByRole("heading", { name: "Page not found" }),
   ).toBeVisible();
   await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(page.getByRole("main")).toHaveCSS(
+    "background-color",
+    "rgb(18, 23, 20)",
+  );
+});
+
+test("uses the system theme on the sign-in screen", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await expect(page.locator(".login-shell")).toHaveCSS(
+    "background-color",
+    "rgb(29, 37, 32)",
+  );
+  await expect(page.getByLabel("Admin phone number")).toHaveCSS(
+    "color",
+    "rgb(237, 242, 236)",
+  );
 });
