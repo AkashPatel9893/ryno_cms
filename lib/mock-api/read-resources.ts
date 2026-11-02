@@ -57,14 +57,14 @@ export function ReadResources(
       dataset === "customers"
         ? {
             display_name: "Example customer",
-            phone: "+919900000010",
+            phone: "",
             email: "customer@example.com",
             city: "Bengaluru",
           }
         : dataset === "riders"
           ? {
               first_name: "Example rider",
-              phone: "+919900000011",
+              phone: "",
               market_code: "BLR",
             }
           : {

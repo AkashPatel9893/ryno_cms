@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "motion/react";
+
 import { useState, useSyncExternalStore } from "react";
 import { Popover } from "radix-ui";
 import { CalendarDays, Check, ChevronDown } from "lucide-react";
@@ -110,101 +112,111 @@ export function PeriodControl({ period, periods, onChange }: Props) {
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content
+            asChild
             className="period-popover"
             align="end"
             sideOffset={8}
             collisionPadding={12}
             aria-label="Choose reporting period"
           >
-            <div className="period-picker-body">
-              <div className="period-presets" aria-label="Quick date ranges">
-                <span className="period-presets-title">Quick ranges</span>
-                {periods.map((item) => (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="period-picker-body">
+                <div className="period-presets" aria-label="Quick date ranges">
+                  <span className="period-presets-title">Quick ranges</span>
+                  {periods.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="period-preset"
+                      aria-pressed={draftPreset?.id === item.id}
+                      onClick={() => {
+                        setDraft({ from: item.from, to: item.to });
+                        setMonth(parseDate(item.from));
+                        setError("");
+                      }}
+                    >
+                      {item.label}
+                      {draftPreset?.id === item.id && (
+                        <Check size={15} aria-hidden="true" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <div className="period-calendar">
+                  <DayPicker
+                    mode="range"
+                    selected={selected}
+                    onSelect={selectRange}
+                    month={month}
+                    onMonthChange={setMonth}
+                    numberOfMonths={compact ? 1 : 2}
+                    weekStartsOn={1}
+                    resetOnSelect
+                    navLayout="around"
+                    aria-label="Select a date range"
+                  />
+                </div>
+              </div>
+              <div className="period-picker-footer">
+                <div className="period-date-inputs">
+                  <label>
+                    From date
+                    <input
+                      type="date"
+                      value={draft.from}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setDraft((current) => ({ ...current, from: value }));
+                        const nextMonth = parseDate(value);
+                        if (nextMonth) setMonth(nextMonth);
+                        setError("");
+                      }}
+                    />
+                  </label>
+                  <label>
+                    To date
+                    <input
+                      type="date"
+                      value={draft.to}
+                      onChange={(event) => {
+                        setDraft((current) => ({
+                          ...current,
+                          to: event.target.value,
+                        }));
+                        setError("");
+                      }}
+                    />
+                  </label>
+                </div>
+                {error && (
+                  <p className="period-error" role="alert">
+                    {error}
+                  </p>
+                )}
+                <div className="period-picker-actions">
                   <button
-                    key={item.id}
                     type="button"
-                    className="period-preset"
-                    aria-pressed={draftPreset?.id === item.id}
+                    className="period-clear"
                     onClick={() => {
-                      setDraft({ from: item.from, to: item.to });
-                      setMonth(parseDate(item.from));
+                      setDraft({ from: "", to: "" });
                       setError("");
                     }}
                   >
-                    {item.label}
-                    {draftPreset?.id === item.id && (
-                      <Check size={15} aria-hidden="true" />
-                    )}
+                    Clear
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    className="period-apply"
+                    onClick={apply}
+                  >
+                    Apply dates
+                  </button>
+                </div>
               </div>
-              <div className="period-calendar">
-                <DayPicker
-                  mode="range"
-                  selected={selected}
-                  onSelect={selectRange}
-                  month={month}
-                  onMonthChange={setMonth}
-                  numberOfMonths={compact ? 1 : 2}
-                  weekStartsOn={1}
-                  resetOnSelect
-                  navLayout="around"
-                  aria-label="Select a date range"
-                />
-              </div>
-            </div>
-            <div className="period-picker-footer">
-              <div className="period-date-inputs">
-                <label>
-                  From date
-                  <input
-                    type="date"
-                    value={draft.from}
-                    onChange={(event) => {
-                      const value = event.target.value;
-                      setDraft((current) => ({ ...current, from: value }));
-                      const nextMonth = parseDate(value);
-                      if (nextMonth) setMonth(nextMonth);
-                      setError("");
-                    }}
-                  />
-                </label>
-                <label>
-                  To date
-                  <input
-                    type="date"
-                    value={draft.to}
-                    onChange={(event) => {
-                      setDraft((current) => ({
-                        ...current,
-                        to: event.target.value,
-                      }));
-                      setError("");
-                    }}
-                  />
-                </label>
-              </div>
-              {error && (
-                <p className="period-error" role="alert">
-                  {error}
-                </p>
-              )}
-              <div className="period-picker-actions">
-                <button
-                  type="button"
-                  className="period-clear"
-                  onClick={() => {
-                    setDraft({ from: "", to: "" });
-                    setError("");
-                  }}
-                >
-                  Clear
-                </button>
-                <button type="button" className="period-apply" onClick={apply}>
-                  Apply dates
-                </button>
-              </div>
-            </div>
+            </motion.div>
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>

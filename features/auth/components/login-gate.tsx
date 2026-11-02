@@ -96,7 +96,7 @@ export function LoginGate({ onSignedIn }: { onSignedIn: () => void }) {
                     type="tel"
                     inputMode="numeric"
                     autoComplete="tel-national"
-                    placeholder="98765 43210"
+                    placeholder="Enter your phone number"
                     maxLength={10}
                     {...register("phone")}
                     onChange={(event) =>

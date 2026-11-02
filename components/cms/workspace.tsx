@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, Check, Menu, X } from "lucide-react";
+import { Check, Menu, X } from "lucide-react";
+import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import {
   api,
@@ -23,6 +24,8 @@ import { DataScreen } from "@/features/data/components/data-screen";
 import { PaymentsScreen } from "@/features/payments/components/payments-screen";
 import { PeriodControl } from "@/components/cms/period-control";
 import { AccountMenu } from "@/components/cms/account-menu";
+import { AlertsPopover } from "@/components/cms/alerts-popover";
+import { BackendHealth } from "@/components/cms/backend-health";
 import { Modal } from "@/components/cms/modal";
 import { LoginGate } from "@/features/auth/components/login-gate";
 import { Sidebar } from "@/components/cms/sidebar";
@@ -74,11 +77,13 @@ export default function Workspace({
   }, [dispatch]);
   const [dialog, setDialog] = useState<(Dialog & { id: number }) | null>(null);
   const context = useApi<
-    [
-      { user: Row; server_time: string; markets: Row[]; roles?: string[] },
-      Page<Row>,
-    ]
-  >(["/admin/workspace", "/admin/alerts?limit=10"], revision, signedIn);
+    [{ user: Row; server_time: string; markets: Row[]; roles?: string[] }]
+  >(["/admin/workspace"], revision, signedIn);
+  const alerts = useApi<[Page<Row>]>(
+    ["/admin/alerts?limit=10"],
+    revision,
+    signedIn,
+  );
   const currentUser = context.data?.[0].user;
   function notify(message: string) {
     setToast(message);
@@ -202,36 +207,13 @@ export default function Workspace({
                 : "Connecting…"}{" "}
               IST
             </span>
-            <button
-              className="notification"
-              aria-label="Notifications"
-              onClick={() =>
-                openDialog({
-                  title: "Operational alerts",
-                  body: context.data ? (
-                    <div className="notifications">
-                      {context.data[1].items
-                        .filter((r) => r.status !== "RESOLVED")
-                        .map((r) => (
-                          <p key={r.id}>
-                            <strong>{String(r.title)}</strong>
-                            <small>
-                              {labelStatus(r.status)} · {dateTime(r.created_at)}
-                            </small>
-                          </p>
-                        ))}
-                    </div>
-                  ) : (
-                    <p>
-                      Alerts are not available. Refresh the workspace and try
-                      again.
-                    </p>
-                  ),
-                })
-              }
-            >
-              <Bell size={20} aria-hidden="true" />
-            </button>
+            <BackendHealth />
+            <AlertsPopover
+              alerts={alerts.data?.[0] ?? null}
+              loading={alerts.loading}
+              error={alerts.error}
+              onRefresh={() => dispatch(refreshWorkspace())}
+            />
             <AccountMenu
               user={currentUser}
               roles={context.data?.[0].roles}
@@ -269,7 +251,13 @@ export default function Workspace({
               </button>
             </div>
           )}
-          {screen}
+          <motion.div
+            key={section}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            {screen}
+          </motion.div>
           <footer>
             <span>
               Bengaluru · INR ·{" "}
@@ -298,9 +286,4 @@ export default function Workspace({
       )}
     </div>
   );
-}
-function labelStatus(value: unknown) {
-  return String(value || "")
-    .replaceAll("_", " ")
-    .toLowerCase();
 }
