@@ -175,27 +175,6 @@ nav a.active {
   color: white;
   font-weight: 600;
 }
-.sidebar-note {
-  background: #262720;
-  border-radius: 15px;
-  padding: 18px 16px;
-  margin-top: 40px;
-}
-.broadcast {
-  color: var(--orange);
-  font-size: 23px;
-  display: block;
-  margin-bottom: 9px;
-}
-.sidebar-note strong {
-  font-size: 12px;
-  color: #eee;
-}
-.sidebar-note p {
-  font-size: 12px;
-  line-height: 1.55;
-  margin-top: 10px;
-}
 .help {
   display: flex;
   gap: 13px;

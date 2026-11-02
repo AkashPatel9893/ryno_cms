@@ -10,7 +10,6 @@ import {
   LayoutDashboard,
   Megaphone,
   Package,
-  Radio,
   UsersRound,
   WalletCards,
 } from "lucide-react";
@@ -72,17 +71,6 @@ export function Sidebar({
           );
         })}
       </nav>
-      <div className="sidebar-note">
-        <span className="broadcast">
-          <Radio size={20} strokeWidth={1.7} aria-hidden="true" />
-        </span>
-        <strong>Every delivery counts.</strong>
-        <p>
-          Delivering more.
-          <br />
-          Worrying less.
-        </p>
-      </div>
       <Link href="/help" className="help" onClick={() => setMobile(false)}>
         <CircleHelp size={17} strokeWidth={1.7} aria-hidden="true" />
         Help &amp; support
