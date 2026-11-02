@@ -237,7 +237,7 @@ export function Chart({ points }: { points: Point[] }) {
         >
           <path
             d="M0 10H760 M0 70H760 M0 130H760 M0 190H760"
-            stroke="#eeece8"
+            stroke="var(--line)"
             fill="none"
           />
           {points.length === 1 ? (
