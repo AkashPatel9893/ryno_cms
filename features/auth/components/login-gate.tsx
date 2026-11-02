@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LoginBrand } from "@/components/cms/login-brand";
+import { LoginBrand } from "@/features/auth/components/login-brand";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

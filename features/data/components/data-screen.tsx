@@ -15,7 +15,7 @@ import {
   type Page,
   type Row,
 } from "@/lib/cms/client";
-import { TransferHistory } from "@/components/cms/transfer-history";
+import { TransferHistory } from "@/features/data/components/transfer-history";
 import { attempt, type ScreenProps } from "@/components/cms/screen-utils";
 import {
   Badge,

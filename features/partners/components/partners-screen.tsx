@@ -28,8 +28,8 @@ import {
 import {
   DriverReviewPanel,
   VerificationQueues,
-} from "@/components/cms/driver-verification";
-import { VehicleCatalog } from "@/components/cms/vehicle-catalog";
+} from "@/features/partners/components/driver-verification";
+import { VehicleCatalog } from "@/features/partners/components/vehicle-catalog";
 import { type ScreenProps } from "@/components/cms/screen-utils";
 export function PartnersScreen({ period, revision, actions }: ScreenProps) {
   const [tab, setTab] = useState(0),

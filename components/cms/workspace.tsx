@@ -13,18 +13,18 @@ import {
   type Page,
   type Row,
 } from "@/lib/cms/client";
-import {
-  DashboardScreen,
-  OrdersScreen,
-  PartnersScreen,
-  ReportsScreen,
-} from "@/components/cms/operations";
-import { AnalyticsScreen, MarketingScreen } from "@/components/cms/insights";
-import { DataScreen, PaymentsScreen } from "@/components/cms/transfers";
+import { DashboardScreen } from "@/features/dashboard/components/dashboard-screen";
+import { OrdersScreen } from "@/features/orders/components/orders-screen";
+import { PartnersScreen } from "@/features/partners/components/partners-screen";
+import { ReportsScreen } from "@/features/reports/components/reports-screen";
+import { AnalyticsScreen } from "@/features/analytics/components/analytics-screen";
+import { MarketingScreen } from "@/features/marketing/components/marketing-screen";
+import { DataScreen } from "@/features/data/components/data-screen";
+import { PaymentsScreen } from "@/features/payments/components/payments-screen";
 import { PeriodControl } from "@/components/cms/period-control";
 import { AccountMenu } from "@/components/cms/account-menu";
 import { Modal } from "@/components/cms/modal";
-import { LoginGate } from "@/components/cms/login-gate";
+import { LoginGate } from "@/features/auth/components/login-gate";
 import { Sidebar } from "@/components/cms/sidebar";
 import { sections, descriptions } from "@/components/cms/navigation";
 import { reportingPeriods } from "@/lib/cms/reporting-periods";
