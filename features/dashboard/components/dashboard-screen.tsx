@@ -72,12 +72,86 @@ export function DashboardScreen({ period, actions }: ScreenProps) {
         )}
       </div>
       <div className="grid wide">
-        <Panel
-          title="Revenue momentum"
-          sub={`${dateLabel(period)} · delivered fares`}
-        >
-          <Chart points={d.revenue_series} />
-        </Panel>
+        <div className="dashboard-stack">
+          <Panel
+            title="Revenue momentum"
+            sub={`${dateLabel(period)} · delivered fares`}
+          >
+            <Chart points={d.revenue_series} />
+          </Panel>
+          <Panel
+            title="Web enquiries"
+            sub={`${enquiries.total_count} enquiries · review and follow-up`}
+            action={<Badge orange>Web records</Badge>}
+          >
+            <Table
+              heads={[
+                "Contact",
+                "Reason",
+                "Enquiry details",
+                "Owner / received",
+                "Action",
+              ]}
+              rows={enquiries.items.map((r) => [
+                <Cell
+                  key="c"
+                  title={String(r.contact_name)}
+                  sub={String(r.phone_masked)}
+                />,
+                label(r.reason_code),
+                String(r.message),
+                <Cell
+                  key="t"
+                  title={label(r.status)}
+                  sub={dateTime(r.received_at)}
+                />,
+                <TextButton
+                  key="a"
+                  onClick={() =>
+                    actions.dialog({
+                      title: String(r.contact_name),
+                      fields: [
+                        {
+                          name: "status",
+                          label: "Follow-up status",
+                          options: [
+                            "NEW",
+                            "ASSIGNED",
+                            "FOLLOW_UP",
+                            "RESOLVED",
+                            "SPAM",
+                          ].map((value) => ({ value, label: label(value) })),
+                          value: String(r.status),
+                        },
+                        {
+                          name: "note",
+                          label: "Follow-up note",
+                          required: true,
+                        },
+                      ],
+                      submitLabel: "Save follow-up",
+                      submit: async (data) => {
+                        await api(`/admin/web-enquiries/${r.id}`, {
+                          method: "PATCH",
+                          body: JSON.stringify({
+                            status: data.get("status"),
+                            note: data.get("note"),
+                            reason: "CMS follow-up update",
+                          }),
+                        });
+                        actions.refresh();
+                        actions.notify("Follow-up saved.");
+                      },
+                    })
+                  }
+                >
+                  Review{" "}
+                  <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" />
+                </TextButton>,
+              ])}
+            />
+          </Panel>
+        </div>
         <Panel
           title="Rides by business"
           sub="B2C = individual · B2B = business"
@@ -92,74 +166,6 @@ export function DashboardScreen({ period, actions }: ScreenProps) {
           />
         </Panel>
       </div>
-      <Panel
-        title="Web enquiries"
-        sub={`${enquiries.total_count} enquiries · review and follow-up`}
-        action={<Badge orange>Web records</Badge>}
-      >
-        <Table
-          heads={[
-            "Contact",
-            "Reason",
-            "Enquiry details",
-            "Owner / received",
-            "Action",
-          ]}
-          rows={enquiries.items.map((r) => [
-            <Cell
-              key="c"
-              title={String(r.contact_name)}
-              sub={String(r.phone_masked)}
-            />,
-            label(r.reason_code),
-            String(r.message),
-            <Cell
-              key="t"
-              title={label(r.status)}
-              sub={dateTime(r.received_at)}
-            />,
-            <TextButton
-              key="a"
-              onClick={() =>
-                actions.dialog({
-                  title: String(r.contact_name),
-                  fields: [
-                    {
-                      name: "status",
-                      label: "Follow-up status",
-                      options: [
-                        "NEW",
-                        "ASSIGNED",
-                        "FOLLOW_UP",
-                        "RESOLVED",
-                        "SPAM",
-                      ].map((value) => ({ value, label: label(value) })),
-                      value: String(r.status),
-                    },
-                    { name: "note", label: "Follow-up note", required: true },
-                  ],
-                  submitLabel: "Save follow-up",
-                  submit: async (data) => {
-                    await api(`/admin/web-enquiries/${r.id}`, {
-                      method: "PATCH",
-                      body: JSON.stringify({
-                        status: data.get("status"),
-                        note: data.get("note"),
-                        reason: "CMS follow-up update",
-                      }),
-                    });
-                    actions.refresh();
-                    actions.notify("Follow-up saved.");
-                  },
-                })
-              }
-            >
-              Review{" "}
-              <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" />
-            </TextButton>,
-          ])}
-        />
-      </Panel>
     </>
   );
 }

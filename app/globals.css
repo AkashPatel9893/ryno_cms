@@ -421,6 +421,14 @@ h1 {
 .grid > .panel {
   margin-bottom: 0;
 }
+.dashboard-stack {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+.dashboard-stack > .panel {
+  margin-bottom: 0;
+}
 .panel-heading {
   display: flex;
   justify-content: space-between;
