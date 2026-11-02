@@ -23,14 +23,8 @@ type VehicleType = {
   requires_fitness_certificate: boolean;
 };
 
-export function VehicleCatalog({
-  revision,
-  actions,
-}: {
-  revision: number;
-  actions: Actions;
-}) {
-  const state = useApi<[VehicleType[]]>(["/vehicle-types"], revision);
+export function VehicleCatalog({ actions }: { actions: Actions }) {
+  const state = useApi<[VehicleType[]]>(["/vehicle-types"]);
   function createVehicleType() {
     actions.dialog({
       title: "Add vehicle type",

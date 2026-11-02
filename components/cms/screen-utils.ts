@@ -1,7 +1,6 @@
 import type { Actions, Period } from "@/lib/cms/types";
 export type ScreenProps = {
   period: Period;
-  revision: number;
   actions: Actions;
 };
 export async function attempt(actions: Actions, task: () => Promise<void>) {

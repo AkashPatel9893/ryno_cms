@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Check, Menu, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
@@ -34,11 +35,10 @@ import { reportingPeriods } from "@/lib/cms/reporting-periods";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import {
   initializeReportingPeriod,
-  refreshWorkspace,
   setMobileNavigationOpen,
   setReportingPeriod,
-  setSignedIn,
 } from "@/lib/store/workspace-slice";
+import { setSignedIn } from "@/lib/store/session-slice";
 import { RecordDetail } from "@/components/cms/ui";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -50,13 +50,13 @@ export default function Workspace({
   const section =
     sections.find((s) => s.toLowerCase() === initialSection) || "Dashboard";
   const dispatch = useAppDispatch();
-  const {
-    mobileNavigationOpen: mobile,
-    revision,
-    period,
-    signedIn,
-    sessionChecked,
-  } = useAppSelector((state) => state.workspace);
+  const queryClient = useQueryClient();
+  const { mobileNavigationOpen: mobile, period } = useAppSelector(
+    (state) => state.workspace,
+  );
+  const { signedIn, checked: sessionChecked } = useAppSelector(
+    (state) => state.session,
+  );
   const [toast, setToast] = useState("");
   const setMobile = (open: boolean) => dispatch(setMobileNavigationOpen(open));
   const [periods, setPeriods] = useState<ReturnType<typeof reportingPeriods>>(
@@ -99,12 +99,8 @@ export default function Workspace({
   const [dialog, setDialog] = useState<(Dialog & { id: number }) | null>(null);
   const context = useApi<
     [{ user: Row; server_time: string; markets: Row[]; roles?: string[] }]
-  >(["/admin/workspace"], revision, signedIn);
-  const alerts = useApi<[Page<Row>]>(
-    ["/admin/alerts?limit=10"],
-    revision,
-    signedIn,
-  );
+  >(["/admin/workspace"], signedIn);
+  const alerts = useApi<[Page<Row>]>(["/admin/alerts?limit=10"], signedIn);
   const currentUser = context.data?.[0].user;
   function notify(message: string) {
     setToast(message);
@@ -116,7 +112,9 @@ export default function Workspace({
   const actions: Actions = {
     notify,
     dialog: openDialog,
-    refresh: () => dispatch(refreshWorkspace()),
+    refresh: () => {
+      void queryClient.invalidateQueries({ queryKey: ["cms"] });
+    },
     inspect: (title, path) => {
       const id = Date.now();
       setDialog({
@@ -159,6 +157,7 @@ export default function Workspace({
     // An expired or missing session returns to the full-page sign-in (no pop-up, nothing else shown).
     const handleUnauthorized = () => {
       dispatch(setSignedIn(false));
+      dispatch(setMobileNavigationOpen(false));
       setDialog(null);
     };
     window.addEventListener("ryno:admin_unauthorized", handleUnauthorized);
@@ -168,27 +167,21 @@ export default function Workspace({
 
   const screen =
     !period || !signedIn ? null : section === "Dashboard" ? (
-      <DashboardScreen {...{ period, revision, actions }} />
+      <DashboardScreen {...{ period, actions }} />
     ) : section === "Orders" ? (
-      <OrdersScreen
-        key={period.from + period.to}
-        {...{ period, revision, actions }}
-      />
+      <OrdersScreen key={period.from + period.to} {...{ period, actions }} />
     ) : section === "Reports" ? (
-      <ReportsScreen {...{ period, revision, actions }} />
+      <ReportsScreen {...{ period, actions }} />
     ) : section === "Marketing" ? (
-      <MarketingScreen {...{ period, revision, actions }} />
+      <MarketingScreen {...{ period, actions }} />
     ) : section === "Partners" ? (
-      <PartnersScreen
-        key={period.from + period.to}
-        {...{ period, revision, actions }}
-      />
+      <PartnersScreen key={period.from + period.to} {...{ period, actions }} />
     ) : section === "Analytics" ? (
-      <AnalyticsScreen {...{ period, revision, actions }} />
+      <AnalyticsScreen {...{ period, actions }} />
     ) : section === "Data" ? (
-      <DataScreen {...{ period, revision, actions }} />
+      <DataScreen {...{ period, actions }} />
     ) : (
-      <PaymentsScreen {...{ period, revision, actions }} />
+      <PaymentsScreen {...{ period, actions }} />
     );
   if (!sessionChecked) {
     return (
@@ -213,7 +206,7 @@ export default function Workspace({
       <LoginGate
         onSignedIn={() => {
           dispatch(setSignedIn(true));
-          dispatch(refreshWorkspace());
+          actions.refresh();
           setToast("Signed in successfully.");
           setTimeout(() => setToast(""), 5000);
         }}
@@ -258,7 +251,7 @@ export default function Workspace({
               alerts={alerts.data?.[0] ?? null}
               loading={alerts.loading}
               error={alerts.error}
-              onRefresh={() => dispatch(refreshWorkspace())}
+              onRefresh={actions.refresh}
             />
             <AccountMenu
               user={currentUser}
@@ -266,8 +259,8 @@ export default function Workspace({
               onSignOut={() => {
                 clearAdminSession();
                 dispatch(setSignedIn(false));
+                dispatch(setMobileNavigationOpen(false));
                 setDialog(null);
-                actions.refresh();
                 notify("Signed out.");
               }}
             />

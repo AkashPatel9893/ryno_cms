@@ -12,7 +12,7 @@ import {
 import { type ScreenProps } from "@/components/cms/screen-utils";
 import { Badge, LoadState, Panel, Stats, Table } from "@/components/cms/ui";
 
-export function PaymentsScreen({ period, revision, actions }: ScreenProps) {
+export function PaymentsScreen({ period, actions }: ScreenProps) {
   const state = useApi<
     [
       Aggregate<{
@@ -26,13 +26,10 @@ export function PaymentsScreen({ period, revision, actions }: ScreenProps) {
       }>,
       Aggregate<{ controls: Row[] }>,
     ]
-  >(
-    [
-      `/admin/reports/statement?${query(period)}`,
-      `/admin/reports/reconciliation?${query(period)}`,
-    ],
-    revision,
-  );
+  >([
+    `/admin/reports/statement?${query(period)}`,
+    `/admin/reports/reconciliation?${query(period)}`,
+  ]);
   if (!state.data)
     return <LoadState error={state.error} retry={actions.refresh} />;
   const [statement, reconciliation] = state.data;

@@ -4,16 +4,10 @@ import type { Period } from "@/lib/cms/types";
 type WorkspaceState = {
   mobileNavigationOpen: boolean;
   period: Period | null;
-  signedIn: boolean;
-  sessionChecked: boolean;
-  revision: number;
 };
 const initialState: WorkspaceState = {
   mobileNavigationOpen: false,
   period: null,
-  signedIn: false,
-  sessionChecked: false,
-  revision: 0,
 };
 
 const workspaceSlice = createSlice({
@@ -29,21 +23,11 @@ const workspaceSlice = createSlice({
     initializeReportingPeriod(state, action: PayloadAction<Period>) {
       state.period ??= action.payload;
     },
-    setSignedIn(state, action: PayloadAction<boolean>) {
-      state.signedIn = action.payload;
-      state.sessionChecked = true;
-      if (!action.payload) state.mobileNavigationOpen = false;
-    },
-    refreshWorkspace(state) {
-      state.revision += 1;
-    },
   },
 });
 export const {
   setMobileNavigationOpen,
   setReportingPeriod,
   initializeReportingPeriod,
-  setSignedIn,
-  refreshWorkspace,
 } = workspaceSlice.actions;
 export const workspaceReducer = workspaceSlice.reducer;

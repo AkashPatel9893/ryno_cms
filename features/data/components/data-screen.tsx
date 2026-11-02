@@ -28,7 +28,7 @@ import {
   TextButton,
 } from "@/components/cms/ui";
 
-export function DataScreen({ period, revision, actions }: ScreenProps) {
+export function DataScreen({ period, actions }: ScreenProps) {
   const [tab, setTab] = useState(0),
     [dataset, setDataset] = useState("customers"),
     [exportSet, setExportSet] = useState("order_register"),
@@ -51,16 +51,13 @@ export function DataScreen({ period, revision, actions }: ScreenProps) {
         last_transfer_at: string | null;
       },
     ]
-  >(
-    [
-      "/admin/data/templates",
-      `/admin/data/transfers?limit=50&cursor=${encodeURIComponent(historyCursor)}`,
-      `/admin/order-register/summary?${query(period)}`,
-      "/admin/customers?limit=1",
-      "/admin/data/summary",
-    ],
-    revision,
-  );
+  >([
+    "/admin/data/templates",
+    `/admin/data/transfers?limit=50&cursor=${encodeURIComponent(historyCursor)}`,
+    `/admin/order-register/summary?${query(period)}`,
+    "/admin/customers?limit=1",
+    "/admin/data/summary",
+  ]);
   function selectFile(next: File | undefined) {
     setError("");
     setJob(null);

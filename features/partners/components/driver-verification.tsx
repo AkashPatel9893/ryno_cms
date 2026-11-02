@@ -152,23 +152,18 @@ function onboardingDecision(
 export function DriverReviewPanel({
   driverId,
   driverName,
-  revision,
   actions,
   onClose,
 }: {
   driverId: string;
   driverName: string;
-  revision: number;
   actions: Actions;
   onClose: () => void;
 }) {
-  const state = useApi<[DriverReview, Verification[]]>(
-    [
-      `/admin/drivers/${encodeURIComponent(driverId)}/verification`,
-      "/admin/verifications/pending",
-    ],
-    revision,
-  );
+  const state = useApi<[DriverReview, Verification[]]>([
+    `/admin/drivers/${encodeURIComponent(driverId)}/verification`,
+    "/admin/verifications/pending",
+  ]);
   if (!state.data)
     return <LoadState error={state.error} retry={actions.refresh} />;
   const [review, queue] = state.data;
@@ -288,18 +283,16 @@ export function DriverReviewPanel({
 }
 
 export function VerificationQueues({
-  revision,
   actions,
   onReview,
 }: {
-  revision: number;
   actions: Actions;
   onReview: (id: string, name: string) => void;
 }) {
-  const state = useApi<[PendingDriver[], Verification[]]>(
-    ["/admin/onboarding/pending", "/admin/verifications/pending"],
-    revision,
-  );
+  const state = useApi<[PendingDriver[], Verification[]]>([
+    "/admin/onboarding/pending",
+    "/admin/verifications/pending",
+  ]);
   if (!state.data)
     return <LoadState error={state.error} retry={actions.refresh} />;
   const [drivers, verifications] = state.data;

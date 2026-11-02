@@ -36,7 +36,7 @@ const orderGroups = [
   "CANCELLED",
   "FAILED",
 ];
-export function OrdersScreen({ period, revision, actions }: ScreenProps) {
+export function OrdersScreen({ period, actions }: ScreenProps) {
   const [tab, setTab] = useState(0),
     [search, setSearch] = useState(""),
     [method, setMethod] = useState(""),
@@ -50,12 +50,9 @@ export function OrdersScreen({ period, revision, actions }: ScreenProps) {
     customer_type: business,
     payment_timing: timing,
   };
-  const orders = useApi<[Page<Order>]>(
-    [
-      `/admin/order-register?${query(period, { ...filters, status_group: orderGroups[tab], cursor, limit: "7" })}`,
-    ],
-    revision,
-  );
+  const orders = useApi<[Page<Order>]>([
+    `/admin/order-register?${query(period, { ...filters, status_group: orderGroups[tab], cursor, limit: "7" })}`,
+  ]);
   const summary = useApi<
     [
       {
@@ -67,7 +64,7 @@ export function OrdersScreen({ period, revision, actions }: ScreenProps) {
         cancellation_rate_percent: number | null;
       },
     ]
-  >([`/admin/order-register/summary?${query(period, filters)}`], revision);
+  >([`/admin/order-register/summary?${query(period, filters)}`]);
   const reset = () => setCursors([""]);
   const rows = orders.data?.[0],
     counts = summary.data?.[0];

@@ -105,6 +105,32 @@ test("filters orders and exports the matching selection", async ({ page }) => {
     from_date: "2026-05-01",
     to_date: "2026-05-31",
   });
+  let releaseOrders!: () => void;
+  const pendingOrders = new Promise<void>((resolve) => {
+    releaseOrders = resolve;
+  });
+  await page.route("**/api/v1/admin/order-register?**", async (route) => {
+    await pendingOrders;
+    await route.fulfill({
+      json: {
+        items: [],
+        next_cursor: null,
+        total_count: 0,
+        as_of: "2026-01-01T00:00:00Z",
+      },
+    });
+  });
+  await expect(page.getByText("Total bookings", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: /Delivered/ }).click();
+  await expect(
+    page.getByRole("status", { name: "Loading data" }),
+  ).toBeVisible();
+  await expect(page.getByText("Total bookings", { exact: true })).toBeVisible();
+  releaseOrders();
+  await expect(page.getByRole("status", { name: "Loading data" })).toHaveCount(
+    0,
+  );
+
   await page.evaluate(() => {
     (window as typeof window & { savedHeader?: Element | null }).savedHeader =
       document.querySelector(".main-shell > header");

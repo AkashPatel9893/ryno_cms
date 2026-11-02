@@ -71,7 +71,7 @@ export function campaignDialog(actions: ScreenProps["actions"]) {
     },
   });
 }
-export function MarketingScreen({ period, revision, actions }: ScreenProps) {
+export function MarketingScreen({ period, actions }: ScreenProps) {
   const [tab, setTab] = useState(0);
   const state = useApi<
     [
@@ -87,16 +87,13 @@ export function MarketingScreen({ period, revision, actions }: ScreenProps) {
       Page<Row>,
       Page<Row>,
     ]
-  >(
-    [
-      `/admin/marketing/summary?${query(period)}`,
-      "/admin/campaigns?limit=50",
-      "/admin/coupons",
-      "/admin/incentive-programs",
-      "/admin/creative-assets",
-    ],
-    revision,
-  );
+  >([
+    `/admin/marketing/summary?${query(period)}`,
+    "/admin/campaigns?limit=50",
+    "/admin/coupons",
+    "/admin/incentive-programs",
+    "/admin/creative-assets",
+  ]);
   if (!state.data)
     return <LoadState error={state.error} retry={actions.refresh} />;
   const [response, campaigns, coupons, programs, assets] = state.data;

@@ -31,7 +31,7 @@ import {
 } from "@/features/partners/components/driver-verification";
 import { VehicleCatalog } from "@/features/partners/components/vehicle-catalog";
 import { type ScreenProps } from "@/components/cms/screen-utils";
-export function PartnersScreen({ period, revision, actions }: ScreenProps) {
+export function PartnersScreen({ period, actions }: ScreenProps) {
   const [tab, setTab] = useState(0),
     [riderView, setRiderView] = useState(0),
     [search, setSearch] = useState(""),
@@ -48,20 +48,15 @@ export function PartnersScreen({ period, revision, actions }: ScreenProps) {
     "brands",
     "brand-campaigns",
   ];
-  const summary = useApi<[Aggregate<Record<string, number>>]>(
-    [`/admin/partners/summary?${query(period)}`],
-    revision,
-  );
-  const list = useApi<[Page<Row>]>(
-    [
-      `/admin/${paths[tab]}?${query(period, { q: search, cursor, limit: "7" })}`,
-    ],
-    revision,
-  );
-  const invitations = useApi<[Page<Row>]>(
-    ["/admin/driver-invitations?limit=10"],
-    revision,
-  );
+  const summary = useApi<[Aggregate<Record<string, number>>]>([
+    `/admin/partners/summary?${query(period)}`,
+  ]);
+  const list = useApi<[Page<Row>]>([
+    `/admin/${paths[tab]}?${query(period, { q: search, cursor, limit: "7" })}`,
+  ]);
+  const invitations = useApi<[Page<Row>]>([
+    "/admin/driver-invitations?limit=10",
+  ]);
   const summaryData = summary.data?.[0];
   const rows = list.data?.[0];
   const invitationRows = invitations.data?.[0];
@@ -333,22 +328,19 @@ export function PartnersScreen({ period, revision, actions }: ScreenProps) {
           )}
         </Panel>
       )}
-      {tab === 0 && riderView === 2 && (
-        <VehicleCatalog revision={revision} actions={actions} />
-      )}
+      {tab === 0 && riderView === 2 && <VehicleCatalog actions={actions} />}
       {tab === 0 && reviewDriver && (
         <DriverReviewPanel
           key={reviewDriver.id}
           driverId={reviewDriver.id}
           driverName={reviewDriver.name}
-          revision={revision}
+
           actions={actions}
           onClose={() => setReviewDriver(null)}
         />
       )}
       {tab === 0 && riderView === 1 && (
         <VerificationQueues
-          revision={revision}
           actions={actions}
           onReview={(id, name) => setReviewDriver({ id, name })}
         />

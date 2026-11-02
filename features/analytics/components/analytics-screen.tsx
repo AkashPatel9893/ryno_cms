@@ -25,7 +25,7 @@ type DriverMetric = Row & {
   period_delivered_count: number;
   period_fare_revenue: string;
 };
-export function AnalyticsScreen({ period, revision, actions }: ScreenProps) {
+export function AnalyticsScreen({ period, actions }: ScreenProps) {
   const state = useApi<
     [
       Aggregate<{
@@ -69,7 +69,6 @@ export function AnalyticsScreen({ period, revision, actions }: ScreenProps) {
       (name) =>
         `/admin/analytics/${name}?${query(period, { limit: name === "ratings" ? "200" : "7" })}`,
     ),
-    revision,
   );
   if (!state.data)
     return <LoadState error={state.error} retry={actions.refresh} />;

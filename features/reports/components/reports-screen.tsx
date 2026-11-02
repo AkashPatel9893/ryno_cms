@@ -21,7 +21,7 @@ import {
   Table,
 } from "@/components/cms/ui";
 import { attempt, type ScreenProps } from "@/components/cms/screen-utils";
-export function ReportsScreen({ period, revision, actions }: ScreenProps) {
+export function ReportsScreen({ period, actions }: ScreenProps) {
   const state = useApi<
     [
       Aggregate<{
@@ -36,13 +36,10 @@ export function ReportsScreen({ period, revision, actions }: ScreenProps) {
       }>,
       Aggregate<{ status: string; controls: Row[] }>,
     ]
-  >(
-    [
-      `/admin/reports/statement?${query(period)}`,
-      `/admin/reports/reconciliation?${query(period)}`,
-    ],
-    revision,
-  );
+  >([
+    `/admin/reports/statement?${query(period)}`,
+    `/admin/reports/reconciliation?${query(period)}`,
+  ]);
   if (!state.data)
     return <LoadState error={state.error} retry={actions.refresh} />;
   const [statement, reconciliation] = state.data;

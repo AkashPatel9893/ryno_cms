@@ -25,11 +25,11 @@ import {
   TextButton,
 } from "@/components/cms/ui";
 import { type ScreenProps } from "@/components/cms/screen-utils";
-export function DashboardScreen({ period, revision, actions }: ScreenProps) {
-  const state = useApi<[Aggregate<Dashboard>, Page<Row>]>(
-    [`/admin/dashboard?${query(period)}`, "/admin/web-enquiries?limit=3"],
-    revision,
-  );
+export function DashboardScreen({ period, actions }: ScreenProps) {
+  const state = useApi<[Aggregate<Dashboard>, Page<Row>]>([
+    `/admin/dashboard?${query(period)}`,
+    "/admin/web-enquiries?limit=3",
+  ]);
   if (!state.data)
     return <LoadState error={state.error} retry={actions.refresh} />;
   const [response, enquiries] = state.data;
