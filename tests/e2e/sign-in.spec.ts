@@ -86,3 +86,23 @@ test("sign-in fits on a narrow screen", async ({ page }) => {
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
 });
+
+test("removes credentials from the URL and preserves other parameters", async ({
+  page,
+}) => {
+  await page.goto("/?phone=1234567890&code=123456&view=dashboard#overview");
+  await expect(page).toHaveURL(/\?view=dashboard#overview$/);
+  await expect(page.locator("form.login-card")).toHaveAttribute(
+    "method",
+    "post",
+  );
+});
+
+test("does not render the sign-in form before checking the session", async ({
+  request,
+}) => {
+  const response = await request.get("/");
+  const html = await response.text();
+  expect(html).toContain("Checking your session");
+  expect(html).not.toContain('aria-labelledby="login-title"');
+});

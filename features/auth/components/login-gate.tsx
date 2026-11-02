@@ -85,6 +85,7 @@ export function LoginGate({ onSignedIn }: { onSignedIn: () => void }) {
             </div>
             <form
               className="login-card"
+              method="post"
               onSubmit={handleSubmit(submit)}
               noValidate
             >

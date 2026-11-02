@@ -56,12 +56,24 @@ export default function Workspace({
     signedIn,
   } = useAppSelector((state) => state.workspace);
   const [toast, setToast] = useState("");
+  const [sessionChecked, setSessionChecked] = useState(false);
   const setMobile = (open: boolean) => dispatch(setMobileNavigationOpen(open));
   const [periods, setPeriods] = useState<ReturnType<typeof reportingPeriods>>(
     [],
   );
   // Read the clock after mount: the current date is not stable across prerender.
   useEffect(() => {
+    // Clear credentials left by a pre-hydration form submission without reloading.
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("phone") || url.searchParams.has("code")) {
+      url.searchParams.delete("phone");
+      url.searchParams.delete("code");
+      window.history.replaceState(
+        window.history.state,
+        "",
+        `${url.pathname}${url.search}${url.hash}`,
+      );
+    }
     const next = reportingPeriods();
     // Deliberate: the date must be read after mount, so this state cannot be derived during render.
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -70,10 +82,20 @@ export default function Workspace({
     dispatch(
       initializeReportingPeriod({ from: monthToDate.from, to: monthToDate.to }),
     );
-    void ensureAdminToken().then((token) => {
-      if (token) dispatch(setSignedIn(true));
-      else window.dispatchEvent(new Event("ryno:admin_unauthorized"));
-    });
+    let active = true;
+    void ensureAdminToken()
+      .then((token) => {
+        if (active) dispatch(setSignedIn(Boolean(token)));
+      })
+      .catch(() => {
+        if (active) dispatch(setSignedIn(false));
+      })
+      .finally(() => {
+        if (active) setSessionChecked(true);
+      });
+    return () => {
+      active = false;
+    };
   }, [dispatch]);
   const [dialog, setDialog] = useState<(Dialog & { id: number }) | null>(null);
   const context = useApi<
@@ -161,7 +183,19 @@ export default function Workspace({
     ) : (
       <PaymentsScreen {...{ period, revision, actions }} />
     );
-  // First sign in, then the platform: until there is a session nothing of the workspace is rendered.
+  if (!sessionChecked) {
+    return (
+      <div
+        className="flex min-h-screen items-center justify-center bg-[#faf8f4] px-6"
+        role="status"
+        aria-live="polite"
+      >
+        <span className="text-sm font-medium text-[#747168]">
+          Checking your session…
+        </span>
+      </div>
+    );
+  }
   if (!signedIn) {
     return (
       <LoginGate
