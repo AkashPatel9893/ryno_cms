@@ -50,5 +50,6 @@
       "prettier --check"
     ],
     "*.{json,css,md,yml,yaml}": "prettier --check"
-  }
+  },
+  "packageManager": "pnpm@12.15.0"
 }

@@ -1,16 +1,8 @@
-import Workspace from "@/app/workspace";
+import Workspace from "@/components/cms/workspace";
 import { notFound } from "next/navigation";
+import { sections } from "@/components/cms/navigation";
 export function generateStaticParams() {
-  return [
-    "dashboard",
-    "orders",
-    "reports",
-    "marketing",
-    "partners",
-    "analytics",
-    "data",
-    "payments",
-  ].map((section) => ({ section }));
+  return sections.map((section) => ({ section: section.toLowerCase() }));
 }
 export default async function Page({
   params,
@@ -18,18 +10,6 @@ export default async function Page({
   params: Promise<{ section: string }>;
 }) {
   const { section } = await params;
-  if (
-    ![
-      "dashboard",
-      "orders",
-      "reports",
-      "marketing",
-      "partners",
-      "analytics",
-      "data",
-      "payments",
-    ].includes(section)
-  )
-    notFound();
+  if (!sections.some((name) => name.toLowerCase() === section)) notFound();
   return <Workspace key={section} initialSection={section} />;
 }
