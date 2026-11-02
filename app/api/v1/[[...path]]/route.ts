@@ -1,4 +1,6 @@
-const BACKEND_BASE = (process.env.BACKEND_API_URL || "http://localhost:8000").replace(/\/+$/, "");
+const BACKEND_BASE = (
+  process.env.BACKEND_API_URL || "http://localhost:8000"
+).replace(/\/+$/, "");
 
 type Context = { params: Promise<{ path?: string[] }> };
 
@@ -42,9 +44,16 @@ async function route(request: Request, context: Context) {
         code: "BACKEND_UNAVAILABLE",
         error: err instanceof Error ? err.message : String(err),
       },
-      { status: 503 }
+      { status: 503 },
     );
   }
 }
 
-export { route as GET, route as POST, route as PATCH, route as PUT, route as DELETE, route as OPTIONS };
+export {
+  route as GET,
+  route as POST,
+  route as PATCH,
+  route as PUT,
+  route as DELETE,
+  route as OPTIONS,
+};

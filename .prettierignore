@@ -1,0 +1,9 @@
+.next
+.next-e2e
+node_modules
+coverage
+out
+build
+pnpm-lock.yaml
+package-lock.json
+next-env.d.ts
