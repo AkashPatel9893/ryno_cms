@@ -71,10 +71,13 @@ export function Sidebar({
           );
         })}
       </nav>
-      <Link href="/help" className="help" onClick={() => setMobile(false)}>
-        <CircleHelp size={17} strokeWidth={1.7} aria-hidden="true" />
-        Help &amp; support
-      </Link>
+      <div className="sidebar-footer">
+        <span className="sidebar-footer-label">Support</span>
+        <Link href="/help" className="help" onClick={() => setMobile(false)}>
+          <CircleHelp size={17} strokeWidth={1.7} aria-hidden="true" />
+          Help &amp; support
+        </Link>
+      </div>
     </aside>
   );
 }

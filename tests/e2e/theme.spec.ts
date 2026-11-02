@@ -48,7 +48,7 @@ test("supports system, light and dark appearance and remembers selection", async
   await expect(page.locator("html")).toHaveClass(/dark/);
   await expect(page.getByRole("main")).toHaveCSS(
     "background-color",
-    "rgb(18, 23, 20)",
+    "rgb(21, 21, 21)",
   );
 });
 
@@ -58,10 +58,10 @@ test("uses the system theme on the sign-in screen", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await expect(page.locator(".login-shell")).toHaveCSS(
     "background-color",
-    "rgb(29, 37, 32)",
+    "rgb(34, 34, 34)",
   );
   await expect(page.getByLabel("Admin phone number")).toHaveCSS(
     "color",
-    "rgb(237, 242, 236)",
+    "rgb(242, 241, 238)",
   );
 });
