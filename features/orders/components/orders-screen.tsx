@@ -254,52 +254,92 @@ function ActiveTripsPanel({ actions }: { actions: Actions }) {
   );
 }
 
-function AdminActionsPanel({ actions }: { actions: Actions }) {
-  const state = useApi<[AdminAction[]]>(["/admin/admin-actions"]);
-  if (!state.data)
-    return <LoadState error={state.error} retry={actions.refresh} />;
-  const actionList = state.data[0];
+function AdminActionsPanel({
+  actions,
+  initialOrderId,
+}: {
+  actions: Actions;
+  initialOrderId: string;
+}) {
+  const [orderId, setOrderId] = useState(initialOrderId);
+  const [selectedOrderId, setSelectedOrderId] = useState(initialOrderId);
+  const params = new URLSearchParams({
+    entity_type: "order",
+    entity_id: selectedOrderId,
+  });
+  const state = useApi<[AdminAction[]]>(
+    [`/admin/admin-actions?${params}`],
+    Boolean(selectedOrderId),
+  );
   return (
     <Panel
-      title="Admin Operations Audit Log"
-      sub="Recent manual cancellations, assignments, payout runs and operational overrides"
+      title="Order actions audit"
+      sub="Find administrative actions for an order by its record ID."
       action={
-        <Button onClick={actions.refresh}>
-          <RefreshCw size={14} className="inline mr-1" /> Refresh log
-        </Button>
+        selectedOrderId ? (
+          <Button onClick={actions.refresh}>
+            <RefreshCw size={14} className="inline mr-1" /> Refresh log
+          </Button>
+        ) : undefined
       }
     >
-      <Table
-        heads={[
-          "Action Type",
-          "Target Entity",
-          "Admin User",
-          "Reason",
-          "Timestamp",
-        ]}
-        rows={actionList.map((a) => [
-          <Badge key="t" orange={a.action_type.includes("CANCEL")}>
-            {label(a.action_type)}
-          </Badge>,
-          <Cell
-            key="e"
-            title={label(a.entity_type)}
-            sub={a.entity_id ? `${a.entity_id.slice(0, 8)}…` : "—"}
-          />,
-          <span key="u" className="text-xs text-[var(--muted)]">
-            {a.admin_user_id ? `${a.admin_user_id.slice(0, 8)}…` : "System"}
-          </span>,
-          String(a.reason || "—"),
-          dateTime(a.created_at),
-        ])}
-        empty="No recent admin actions recorded."
-      />
+      <form
+        className="filters"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setSelectedOrderId(orderId.trim());
+        }}
+      >
+        <Input
+          aria-label="Order record ID"
+          placeholder="Order record ID (UUID)"
+          value={orderId}
+          onChange={(event) => setOrderId(event.target.value)}
+          required
+          pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+          title="Enter a valid order record ID"
+        />
+        <button className="button primary" type="submit">
+          Find actions
+        </button>
+      </form>
+      {selectedOrderId &&
+        (!state.data ? (
+          <LoadState error={state.error} retry={actions.refresh} />
+        ) : (
+          <Table
+            heads={[
+              "Action Type",
+              "Target Entity",
+              "Admin User",
+              "Reason",
+              "Timestamp",
+            ]}
+            rows={state.data[0].map((a) => [
+              <Badge key="t" orange={a.action_type.includes("CANCEL")}>
+                {label(a.action_type)}
+              </Badge>,
+              <Cell
+                key="e"
+                title={label(a.entity_type)}
+                sub={a.entity_id || "—"}
+              />,
+              <span key="u" className="text-xs text-[var(--muted)]">
+                {a.admin_user_id || "System"}
+              </span>,
+              String(a.reason || "—"),
+              dateTime(a.created_at),
+            ])}
+            empty="No admin actions recorded for this order."
+          />
+        ))}
     </Panel>
   );
 }
 
 export function OrdersScreen({ period, actions }: ScreenProps) {
   const [view, setView] = useState(0); // 0: Order Register, 1: Live Active Trips, 2: Admin Actions
+  const [auditOrderId, setAuditOrderId] = useState("");
   const [tab, setTab] = useState(0),
     [search, setSearch] = useState(""),
     [method, setMethod] = useState(""),
@@ -345,7 +385,9 @@ export function OrdersScreen({ period, actions }: ScreenProps) {
       </div>
 
       {view === 1 && <ActiveTripsPanel actions={actions} />}
-      {view === 2 && <AdminActionsPanel actions={actions} />}
+      {view === 2 && (
+        <AdminActionsPanel actions={actions} initialOrderId={auditOrderId} />
+      )}
 
       {view === 0 && (
         <>
@@ -546,6 +588,14 @@ export function OrdersScreen({ period, actions }: ScreenProps) {
                             strokeWidth={1.8}
                             aria-hidden="true"
                           />
+                        </TextButton>
+                        <TextButton
+                          onClick={() => {
+                            setAuditOrderId(r.id);
+                            setView(2);
+                          }}
+                        >
+                          Audit
                         </TextButton>
                         {!isTerminal && (
                           <TextButton
