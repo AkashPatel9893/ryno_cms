@@ -95,6 +95,14 @@ test("filters orders and exports the matching selection", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
+  await trigger.click();
+  await dialog.getByLabel("From date").fill("2026-05-03");
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  await expect(dialog.getByLabel("From date")).toHaveValue("2026-05-01");
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await search.fill("RY-123");
   await expect.poll(async () => search.inputValue()).toBe("RY-123");
   const download = page.waitForEvent("download");

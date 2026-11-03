@@ -197,6 +197,11 @@ export function PeriodControl({ period, periods, onChange }: Props) {
                   </p>
                 )}
                 <div className="period-picker-actions">
+                  <Popover.Close asChild>
+                    <button type="button" className="period-clear">
+                      Close
+                    </button>
+                  </Popover.Close>
                   <button
                     type="button"
                     className="period-clear"

@@ -106,10 +106,6 @@ export function ReportsScreen({ period, actions }: ScreenProps) {
           note: dateLabel(period),
         }))}
       />
-      <div className="notice">
-        <Badge>Reconciliation</Badge>Operational statement for the selected
-        booking cohort.
-      </div>
       <Panel
         title="Operational statement"
         sub={`${dateLabel(period)} · amounts in INR`}
