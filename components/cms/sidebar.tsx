@@ -7,6 +7,7 @@ import {
   CircleHelp,
   Database,
   FileBarChart,
+  Headset,
   LayoutDashboard,
   Megaphone,
   Package,
@@ -23,6 +24,7 @@ const navigationIcons = [
   BarChart3,
   Database,
   WalletCards,
+  Headset,
 ];
 import { sections } from "@/components/cms/navigation";
 export function Sidebar({
@@ -73,7 +75,7 @@ export function Sidebar({
       </nav>
       <div className="sidebar-footer">
         <span className="sidebar-footer-label">Support</span>
-        <Link href="/help" className="help" onClick={() => setMobile(false)}>
+        <Link href="/support" className="help" onClick={() => setMobile(false)}>
           <CircleHelp size={17} strokeWidth={1.7} aria-hidden="true" />
           Help &amp; support
         </Link>

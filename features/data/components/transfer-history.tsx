@@ -72,15 +72,35 @@ export function TransferHistory({
               <Download size={14} strokeWidth={1.8} aria-hidden="true" />
             </TextButton>
           ) : (
-            <TextButton
+            <div
               key="a"
-              onClick={() =>
-                actions.inspect("Import job", `/admin/data/imports/${r.id}`)
-              }
+              style={{
+                display: "inline-flex",
+                gap: "0.5rem",
+                alignItems: "center",
+              }}
             >
-              View log{" "}
-              <ArrowUpRight size={14} strokeWidth={1.8} aria-hidden="true" />
-            </TextButton>
+              <TextButton
+                onClick={() =>
+                  actions.inspect("Import job", `/admin/data/imports/${r.id}`)
+                }
+              >
+                View log{" "}
+                <ArrowUpRight size={14} strokeWidth={1.8} aria-hidden="true" />
+              </TextButton>
+              {Number(r.error_rows || 0) > 0 ? (
+                <TextButton
+                  onClick={() =>
+                    actions.inspect(
+                      "Import errors",
+                      `/admin/data/imports/${r.id}/errors`,
+                    )
+                  }
+                >
+                  Errors
+                </TextButton>
+              ) : null}
+            </div>
           ),
         ])}
         empty="No transfers yet. Import or export a CSV to create a traceable job."

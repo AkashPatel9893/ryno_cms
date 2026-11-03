@@ -149,6 +149,110 @@ function onboardingDecision(
   });
 }
 
+function suspendDriverDialog(
+  actions: Actions,
+  driverId: string,
+  driverName: string,
+) {
+  actions.dialog({
+    title: `Suspend Driver ${driverName}`,
+    body: (
+      <p className="muted">
+        Suspending will force the driver offline and block new order offers
+        until reinstated.
+      </p>
+    ),
+    fields: [
+      {
+        name: "suspension_type",
+        label: "Suspension type",
+        required: true,
+        options: [
+          { value: "COMPLIANCE", label: "Compliance (document/KYC issue)" },
+          { value: "TEMPORARY", label: "Temporary suspension" },
+          { value: "INDEFINITE", label: "Indefinite suspension" },
+        ],
+      },
+      {
+        name: "reason",
+        label: "Reason for suspension (min 3 characters)",
+        required: true,
+      },
+    ],
+    submitLabel: "Suspend driver",
+    submit: async (form) => {
+      const reason = String(form.get("reason") || "").trim();
+      const suspensionType = String(
+        form.get("suspension_type") || "COMPLIANCE",
+      );
+      if (reason.length < 3)
+        throw new Error("Enter a reason of at least 3 characters.");
+      await post(`/admin/drivers/${driverId}/suspend`, {
+        reason,
+        suspension_type: suspensionType,
+      });
+      actions.refresh();
+      actions.notify(`Driver ${driverName} suspended.`);
+    },
+  });
+}
+
+function reinstateDriverDialog(
+  actions: Actions,
+  driverId: string,
+  driverName: string,
+) {
+  actions.dialog({
+    title: `Reinstate Driver ${driverName}`,
+    body: (
+      <p className="muted">
+        Reinstating restores the driver account to active status and allows
+        going online.
+      </p>
+    ),
+    fields: [
+      {
+        name: "reason",
+        label: "Reason for reinstatement (min 3 characters)",
+        required: true,
+      },
+    ],
+    submitLabel: "Reinstate driver",
+    submit: async (form) => {
+      const reason = String(form.get("reason") || "").trim();
+      if (reason.length < 3)
+        throw new Error("Enter a reason of at least 3 characters.");
+      await post(`/admin/drivers/${driverId}/reinstate`, { reason });
+      actions.refresh();
+      actions.notify(`Driver ${driverName} reinstated.`);
+    },
+  });
+}
+
+function approveAssignmentDialog(actions: Actions, assignmentId: string) {
+  actions.dialog({
+    title: "Approve Vehicle Assignment",
+    body: <p className="muted">Confirm vehicle assignment to this driver.</p>,
+    fields: [
+      {
+        name: "reason",
+        label: "Approval reason",
+        required: true,
+        value: "Vehicle assignment verified by CMS admin",
+      },
+    ],
+    submitLabel: "Approve assignment",
+    submit: async (form) => {
+      const reason = String(form.get("reason") || "").trim();
+      await post(`/admin/assignments/${assignmentId}/approve`, {
+        reason: reason || "Approved by CMS admin",
+      });
+      actions.refresh();
+      actions.notify("Vehicle assignment approved.");
+    },
+  });
+}
+
 export function DriverReviewPanel({
   driverId,
   driverName,
@@ -181,7 +285,27 @@ export function DriverReviewPanel({
     <Panel
       title={`Verification · ${driverName}`}
       sub={`${review.driver_number} · ${label(review.onboarding_status)} · ${label(review.account_status)}`}
-      action={<Button onClick={onClose}>Close</Button>}
+      action={
+        <div className="flex items-center gap-2">
+          {review.account_status === "ACTIVE" ? (
+            <Button
+              onClick={() => suspendDriverDialog(actions, driverId, driverName)}
+            >
+              Suspend driver
+            </Button>
+          ) : review.account_status === "SUSPENDED" ? (
+            <Button
+              primary
+              onClick={() =>
+                reinstateDriverDialog(actions, driverId, driverName)
+              }
+            >
+              Reinstate driver
+            </Button>
+          ) : null}
+          <Button onClick={onClose}>Close</Button>
+        </div>
+      }
     >
       <p className="muted">
         Document images cannot currently be viewed in this panel. Review the
@@ -210,12 +334,28 @@ export function DriverReviewPanel({
       />
       <h3>Vehicles</h3>
       <Table
-        heads={["Vehicle", "Registration", "Vehicle status", "Assignment"]}
+        heads={[
+          "Vehicle",
+          "Registration",
+          "Vehicle status",
+          "Assignment",
+          "Action",
+        ]}
         rows={review.vehicles.map((vehicle) => [
           `${vehicle.make} ${vehicle.model}`,
           vehicle.registration_number,
           label(vehicle.status),
           label(vehicle.assignment_status),
+          vehicle.assignment_status === "PENDING" ? (
+            <TextButton
+              key="appr"
+              onClick={() => approveAssignmentDialog(actions, vehicle.id)}
+            >
+              Approve assignment
+            </TextButton>
+          ) : (
+            "—"
+          ),
         ])}
         empty="No vehicle registered."
       />

@@ -66,8 +66,7 @@ export function AnalyticsScreen({ period, actions }: ScreenProps) {
       "ratings",
       "cancellations",
     ].map(
-      (name) =>
-        `/admin/analytics/${name}?${query(period, { limit: name === "ratings" ? "200" : "7" })}`,
+      (name) => `/admin/analytics/${name}?${query(period, { limit: "7" })}`,
     ),
   );
   if (!state.data)
@@ -82,14 +81,6 @@ export function AnalyticsScreen({ period, actions }: ScreenProps) {
     ratings,
     cancellations,
   ] = state.data;
-  const riderRating = (id: string) => {
-    const mine = ratings.data.items.filter(
-      (x) => (x.driver as { id: string } | null)?.id === id,
-    );
-    return mine.length
-      ? `${(mine.reduce((sum, x) => sum + Number(x.rating), 0) / mine.length).toFixed(1)} (${mine.length})`
-      : "—";
-  };
   const max = Math.max(...demand.data.series.map((p) => p.bookings_count), 1);
   return (
     <>
@@ -104,11 +95,6 @@ export function AnalyticsScreen({ period, actions }: ScreenProps) {
             label: "Bookings",
             value: number(overview.data.bookings_count),
             note: "All booking statuses",
-          },
-          {
-            label: "On-time delivery",
-            value: "Not available",
-            note: "No promised-delivery/SLA targets",
           },
           {
             label: "Average ride rating",
@@ -175,6 +161,9 @@ export function AnalyticsScreen({ period, actions }: ScreenProps) {
           sub="Pickup areas in active zones"
         >
           <div className="area-list">
+            {areas.data.items.length === 0 && (
+              <p className="muted">No pickup areas for this period.</p>
+            )}
             {areas.data.items.map((r) => (
               <div key={r.name}>
                 <div>
@@ -193,16 +182,10 @@ export function AnalyticsScreen({ period, actions }: ScreenProps) {
       </div>
       <Panel
         title="Top riders & performance"
-        sub="Delivered counts, fares and customer ratings · on-time rate needs delivery-time targets"
+        sub="Delivered counts and fares for the selected period · lifetime ratings"
       >
         <Table
-          heads={[
-            "Rider",
-            "Delivered",
-            "Fare revenue",
-            "Rating",
-            "On-time rate",
-          ]}
+          heads={["Rider", "Delivered", "Fare revenue", "Rating"]}
           rows={drivers.data.items.map((r) => [
             <Cell
               key="r"
@@ -211,8 +194,9 @@ export function AnalyticsScreen({ period, actions }: ScreenProps) {
             />,
             number(r.period_delivered_count),
             rupees(r.period_fare_revenue),
-            riderRating(String(r.id)),
-            "No target set",
+            r.rating == null
+              ? "—"
+              : `${Number(r.rating).toFixed(1)} (${number(r.rating_count)})`,
           ])}
         />
       </Panel>
@@ -227,7 +211,7 @@ export function AnalyticsScreen({ period, actions }: ScreenProps) {
                 String(r.rating),
                 r.comment ? String(r.comment) : "—",
               ])}
-            empty="No rating records. Customer feedback is not fabricated."
+            empty="No ratings for this period."
           />
         </Panel>
         <Panel
@@ -242,9 +226,6 @@ export function AnalyticsScreen({ period, actions }: ScreenProps) {
               number(r.count),
             ])}
           />
-          <p className="muted">
-            Production reporting uses the stored cancellation actor and reason.
-          </p>
         </Panel>
       </div>
     </>

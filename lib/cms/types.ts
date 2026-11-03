@@ -14,7 +14,7 @@ export type Order = {
     customer_number: string;
     display_name: string;
     customer_type: string;
-    phone_masked: string;
+    phone: string;
   };
   route: { pickup_label: string; drop_label: string; stop_count: number };
   vehicle_type: { id: string; code: string; name: string };
@@ -53,7 +53,7 @@ export type Aggregate<T> = {
 export type Period = { from: string; to: string };
 export type Point = {
   date: string;
-  amount: string;
+  amount: string | null;
   bookings_count: number;
   comparison_amount: string | null;
 };

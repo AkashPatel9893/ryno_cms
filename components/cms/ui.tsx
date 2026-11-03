@@ -11,7 +11,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Badge as BaseBadge } from "@/components/ui/badge";
-import { number, rupees, type Point } from "@/lib/cms/client";
+import { number } from "@/lib/cms/client";
 export function Badge({
   children,
   orange = false,
@@ -208,88 +208,12 @@ export function Pager({
   );
 }
 export { LoadState } from "@/components/cms/loading-state";
-export function Chart({ points }: { points: Point[] }) {
-  const max = Math.max(...points.map((p) => Number(p.amount)), 1);
-  const total = points.reduce((n, p) => n + Number(p.amount), 0);
-  const coordinates = points
-    .map(
-      (p, i) =>
-        `${points.length === 1 ? 380 : (i / (points.length - 1)) * 760},${190 - (Number(p.amount) / max) * 165}`,
-    )
-    .join(" ");
-  return (
-    <>
-      <div className="legend">
-        <span>● Delivered fare revenue</span>
-        <span>Selected period · INR</span>
-      </div>
-      <div className="line-chart">
-        <div className="axis">
-          <span>{rupees(max)}</span>
-          <span>{rupees(max / 2)}</span>
-          <span>₹0</span>
-        </div>
-        <svg
-          viewBox="0 0 760 205"
-          preserveAspectRatio="none"
-          role="img"
-          aria-label={`Delivered fare revenue: ${rupees(total)} in the selected period`}
-        >
-          <path
-            d="M0 10H760 M0 70H760 M0 130H760 M0 190H760"
-            stroke="var(--line)"
-            fill="none"
-          />
-          {points.length === 1 ? (
-            <circle
-              cx="380"
-              cy={190 - (Number(points[0].amount) / max) * 165}
-              r="4"
-              fill="#ff5722"
-            />
-          ) : (
-            <polyline
-              points={coordinates}
-              stroke="#ff5722"
-              strokeWidth="3"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          )}
-        </svg>
-      </div>
-      <div className="chart-dates">
-        {points
-          .filter(
-            (_, i) =>
-              i === 0 ||
-              i === points.length - 1 ||
-              i % Math.max(1, Math.ceil(points.length / 6)) === 0,
-          )
-          .map((p) => (
-            <span key={p.date}>
-              {new Date(p.date).getUTCDate()}{" "}
-              {new Intl.DateTimeFormat("en", {
-                month: "short",
-                timeZone: "UTC",
-              }).format(new Date(p.date))}
-            </span>
-          ))}
-      </div>
-      <p className="chart-note">
-        Selected-period total: {rupees(total)} · comparison data is not seeded
-      </p>
-    </>
-  );
-}
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export { Chart } from "@/components/cms/revenue-chart";
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
 function detailValue(key: string, value: unknown): React.ReactNode {
   if (value === null) return <span className="muted">—</span>;
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value === "string") {
-    if (UUID.test(value))
-      return <span title={value}>{value.slice(0, 8)}…</span>;
     if (ISO.test(value)) {
       const d = new Date(value);
       if (!Number.isNaN(d.getTime()))
@@ -333,7 +257,10 @@ export function RecordDetail({ record }: { record: unknown }) {
   return (
     <dl className="record-detail">
       {Object.entries(record)
-        .filter(([, value]) => value !== undefined)
+        .filter(
+          ([key, value]) =>
+            value !== undefined && !key.endsWith("phone_masked"),
+        )
         .map(([key, value]) => (
           <div
             key={key}

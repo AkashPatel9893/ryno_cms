@@ -5,10 +5,13 @@ import {
   exportData,
   label,
   number,
+  post,
   query,
   rupees,
   useApi,
+  type Actions,
   type Aggregate,
+  type Period,
   type Row,
 } from "@/lib/cms/client";
 import {
@@ -21,6 +24,47 @@ import {
   Table,
 } from "@/components/cms/ui";
 import { attempt, type ScreenProps } from "@/components/cms/screen-utils";
+
+function recordFinanceReviewDialog(actions: Actions, period: Period) {
+  actions.dialog({
+    title: "Record Finance Review",
+    body: (
+      <p className="muted">
+        Records that finance reviewed this market statement for {period.from} to{" "}
+        {period.to}.
+      </p>
+    ),
+    fields: [
+      {
+        name: "reason",
+        label: "Review reason (min 3 characters)",
+        required: true,
+        value: "Periodic ledger reconciliation",
+      },
+      {
+        name: "note",
+        label: "Review findings or audit note",
+        required: true,
+      },
+    ],
+    submitLabel: "Record review",
+    submit: async (form) => {
+      const reason = String(form.get("reason") || "").trim();
+      const note = String(form.get("note") || "").trim();
+      if (reason.length < 3)
+        throw new Error("Reason must be at least 3 characters.");
+      if (!note) throw new Error("Note is required.");
+      await post("/admin/reports/reviews", {
+        from_date: period.from,
+        to_date: period.to,
+        reason,
+        note,
+      });
+      actions.refresh();
+      actions.notify("Finance review recorded successfully.");
+    },
+  });
+}
 export function ReportsScreen({ period, actions }: ScreenProps) {
   const state = useApi<
     [
@@ -70,17 +114,22 @@ export function ReportsScreen({ period, actions }: ScreenProps) {
         title="Operational statement"
         sub={`${dateLabel(period)} · amounts in INR`}
         action={
-          <Button
-            primary
-            onClick={() =>
-              attempt(actions, async () => {
-                await exportData("finance_statement", period);
-                actions.notify("Statement exported.");
-              })
-            }
-          >
-            Download CSV
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => recordFinanceReviewDialog(actions, period)}>
+              Record review
+            </Button>
+            <Button
+              primary
+              onClick={() =>
+                attempt(actions, async () => {
+                  await exportData("finance_statement", period);
+                  actions.notify("Statement exported.");
+                })
+              }
+            >
+              Download CSV
+            </Button>
+          </div>
         }
       >
         <Table
@@ -94,26 +143,8 @@ export function ReportsScreen({ period, actions }: ScreenProps) {
         />
       </Panel>
       <div className="grid">
-        <Panel
-          title="Export package"
-          sub="CSV generated from the same API data"
-        >
-          <p>Selected-period operational statement</p>
-          <p className="muted">
-            YTD values, GST/TDS accounting and multi-sheet workbooks require
-            backend support. No annual totals are inferred.
-          </p>
+        <Panel title="Audit history" sub="Find the history of a record">
           <div className="actions">
-            <Button
-              onClick={() =>
-                attempt(actions, async () => {
-                  await exportData("finance_statement", period);
-                  actions.notify("Statement downloaded.");
-                })
-              }
-            >
-              Download CSV
-            </Button>
             <Button
               onClick={() =>
                 actions.dialog({
@@ -168,7 +199,7 @@ export function ReportsScreen({ period, actions }: ScreenProps) {
         </Panel>
         <Panel
           title="Review & controls"
-          sub="Bank and gateway evidence is not available"
+          sub="Reconciliation status for the selected period"
         >
           <Table
             heads={["Control", "Status"]}

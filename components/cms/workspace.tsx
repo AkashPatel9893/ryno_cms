@@ -18,11 +18,13 @@ import {
 import { DashboardScreen } from "@/features/dashboard/components/dashboard-screen";
 import { OrdersScreen } from "@/features/orders/components/orders-screen";
 import { PartnersScreen } from "@/features/partners/components/partners-screen";
+import { DriverVerificationScreen } from "@/features/partners/components/driver-verification-screen";
 import { ReportsScreen } from "@/features/reports/components/reports-screen";
 import { AnalyticsScreen } from "@/features/analytics/components/analytics-screen";
 import { MarketingScreen } from "@/features/marketing/components/marketing-screen";
 import { DataScreen } from "@/features/data/components/data-screen";
 import { PaymentsScreen } from "@/features/payments/components/payments-screen";
+import { SupportScreen } from "@/features/support/components/support-screen";
 import { PeriodControl } from "@/components/cms/period-control";
 import { AccountMenu } from "@/components/cms/account-menu";
 import { AlertsPopover } from "@/components/cms/alerts-popover";
@@ -44,8 +46,10 @@ import { Spinner } from "@/components/ui/spinner";
 
 export default function Workspace({
   initialSection = "dashboard",
+  verificationDriverId,
 }: {
   initialSection?: string;
+  verificationDriverId?: string;
 }) {
   const section =
     sections.find((s) => s.toLowerCase() === initialSection) || "Dashboard";
@@ -174,14 +178,21 @@ export default function Workspace({
       <ReportsScreen {...{ period, actions }} />
     ) : section === "Marketing" ? (
       <MarketingScreen {...{ period, actions }} />
+    ) : section === "Partners" && verificationDriverId ? (
+      <DriverVerificationScreen
+        driverId={verificationDriverId}
+        actions={actions}
+      />
     ) : section === "Partners" ? (
       <PartnersScreen key={period.from + period.to} {...{ period, actions }} />
     ) : section === "Analytics" ? (
       <AnalyticsScreen {...{ period, actions }} />
     ) : section === "Data" ? (
       <DataScreen {...{ period, actions }} />
-    ) : (
+    ) : section === "Payments" ? (
       <PaymentsScreen {...{ period, actions }} />
+    ) : (
+      <SupportScreen {...{ period, actions }} />
     );
   if (!sessionChecked) {
     return (
@@ -269,14 +280,20 @@ export default function Workspace({
         <main>
           <div className="page-heading">
             <div>
-              <h1>{section}</h1>
-              <p>{descriptions[section]}</p>
+              <h1>{verificationDriverId ? "Rider verification" : section}</h1>
+              <p>
+                {verificationDriverId
+                  ? "Review documents and onboarding details."
+                  : descriptions[section]}
+              </p>
             </div>
-            <PeriodControl
-              period={period}
-              periods={periods}
-              onChange={(value) => dispatch(setReportingPeriod(value))}
-            />
+            {!verificationDriverId && (
+              <PeriodControl
+                period={period}
+                periods={periods}
+                onChange={(value) => dispatch(setReportingPeriod(value))}
+              />
+            )}
           </div>
           {context.error && (
             <div className="notice" role="alert">

@@ -7,11 +7,23 @@ import { sections } from "@/components/cms/navigation";
 
 export function WorkspaceLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const section = pathname === "/" ? "dashboard" : pathname.slice(1);
+  const verificationPage = /^\/partners\/drivers\/[^/]+\/verification\/?$/.test(
+    pathname,
+  );
+  const section = verificationPage
+    ? "partners"
+    : pathname === "/"
+      ? "dashboard"
+      : pathname.slice(1);
   if (!sections.some((name) => name.toLowerCase() === section)) return children;
   return (
     <>
-      <Workspace initialSection={section} />
+      <Workspace
+        initialSection={section}
+        verificationDriverId={
+          verificationPage ? pathname.split("/")[3] : undefined
+        }
+      />
       {children}
     </>
   );

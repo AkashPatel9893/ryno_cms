@@ -96,7 +96,7 @@ export function DashboardScreen({ period, actions }: ScreenProps) {
                 <Cell
                   key="c"
                   title={String(r.contact_name)}
-                  sub={String(r.phone_masked)}
+                  sub={String(r.phone || "Phone unavailable")}
                 />,
                 label(r.reason_code),
                 String(r.message),

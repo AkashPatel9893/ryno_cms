@@ -66,6 +66,8 @@ test("reviews a pending driver verification", async ({ page }) => {
           eligibility: { online_allowed: false, reasons: [] },
         },
       });
+    if (path.endsWith("/drivers/driver-1"))
+      return route.fulfill({ json: { first_name: "Asha", last_name: "Rao" } });
     if (path.endsWith("/verifications/pending"))
       return route.fulfill({
         json: [
@@ -93,6 +95,25 @@ test("reviews a pending driver verification", async ({ page }) => {
   });
   await page.goto("/partners");
   await page.getByRole("button", { name: "Verification" }).click();
+  await expect(page).toHaveURL(/\/partners\/drivers\/driver-1\/verification$/);
+  await expect(
+    page.getByRole("heading", { name: "Verification · Asha Rao" }),
+  ).toBeVisible();
+  for (const width of [1440, 375]) {
+    await page.setViewportSize({ width, height: 800 });
+    const panel = page
+      .getByRole("heading", { name: "Verification · Asha Rao" })
+      .locator("xpath=ancestor::section[contains(@class, 'panel')]");
+    const back = page.getByRole("link", { name: "Back to partners" });
+    const [panelBox, backBox, mainBox] = await Promise.all([
+      panel.boundingBox(),
+      back.boundingBox(),
+      page.locator("main").boundingBox(),
+    ]);
+    expect(panelBox!.y).toBeGreaterThan(backBox!.y);
+    expect(panelBox!.width).toBeGreaterThan(mainBox!.width * 0.8);
+  }
+  await page.reload();
   await expect(
     page.getByRole("heading", { name: "Verification · Asha Rao" }),
   ).toBeVisible();
@@ -104,4 +125,6 @@ test("reviews a pending driver verification", async ({ page }) => {
   await dialog.getByRole("button", { name: "Approve verification" }).click();
   await expect(dialog).toBeHidden();
   expect(decision).toMatchObject({ reason_code: "VERIFIED" });
+  await page.getByRole("link", { name: "Back to partners" }).click();
+  await expect(page).toHaveURL(/\/partners$/);
 });

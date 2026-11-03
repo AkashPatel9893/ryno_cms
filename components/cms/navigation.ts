@@ -7,6 +7,7 @@ export const sections = [
   "Analytics",
   "Data",
   "Payments",
+  "Support",
 ];
 export const descriptions: Record<string, string> = {
   Dashboard: "Your last-mile operations, at a glance.",
@@ -18,5 +19,7 @@ export const descriptions: Record<string, string> = {
   Analytics:
     "Explore booking demand, delivered fares and real-time operations.",
   Data: "Bring validated records in. Download traceable CSV snapshots.",
-  Payments: "Review payment totals and reconciliation status.",
+  Payments: "Review payment totals, reconciliation status and payout runs.",
+  Support:
+    "Resolve customer and driver tickets, triage issues, and send updates.",
 };

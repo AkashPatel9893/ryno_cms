@@ -1,6 +1,5 @@
 "use client";
 import { ArrowUpRight } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 import {
   api,
@@ -26,6 +25,124 @@ import {
   Tabs,
   TextButton,
 } from "@/components/cms/ui";
+
+export function couponDialog(actions: ScreenProps["actions"]) {
+  actions.dialog({
+    title: "Create Discount Coupon",
+    body: (
+      <p className="muted">
+        Define a customer coupon discount code for booking fare calculation.
+      </p>
+    ),
+    fields: [
+      {
+        name: "code",
+        label: "Coupon code (e.g. SAVE20, DIWALI50)",
+        required: true,
+      },
+      { name: "title", label: "Coupon title", required: true },
+      {
+        name: "description",
+        label: "Description (e.g. 20% off up to ₹100)",
+        required: true,
+      },
+      {
+        name: "discount_type",
+        label: "Discount type",
+        required: true,
+        options: [
+          { value: "PERCENT", label: "Percentage off (%)" },
+          { value: "FLAT", label: "Flat discount (₹)" },
+        ],
+      },
+      {
+        name: "discount_value",
+        label: "Discount value",
+        type: "number",
+        required: true,
+      },
+      { name: "min_fare", label: "Minimum fare (₹, optional)", type: "number" },
+      {
+        name: "max_discount",
+        label: "Maximum discount (₹, optional for %)",
+        type: "number",
+      },
+      { name: "valid_from", label: "Valid from (date)", type: "date" },
+      { name: "valid_until", label: "Valid until (date)", type: "date" },
+    ],
+    submitLabel: "Create coupon",
+    submit: async (form) => {
+      const code = String(form.get("code") || "")
+        .trim()
+        .toUpperCase();
+      const title = String(form.get("title") || "").trim();
+      const description = String(form.get("description") || "").trim();
+      const discountType = String(form.get("discount_type") || "PERCENT");
+      const discountValue = Number(form.get("discount_value"));
+      const minFare = form.get("min_fare")
+        ? Number(form.get("min_fare"))
+        : undefined;
+      const maxDiscount = form.get("max_discount")
+        ? Number(form.get("max_discount"))
+        : undefined;
+      const validFrom = form.get("valid_from")
+        ? `${form.get("valid_from")}T00:00:00+05:30`
+        : undefined;
+      const validUntil = form.get("valid_until")
+        ? `${form.get("valid_until")}T23:59:59+05:30`
+        : undefined;
+
+      if (!code || code.length < 3)
+        throw new Error("Coupon code must be at least 3 characters.");
+      if (isNaN(discountValue) || discountValue <= 0)
+        throw new Error("Enter a positive discount value.");
+
+      await post("/admin/coupons", {
+        code,
+        title,
+        description,
+        discount_type: discountType,
+        discount_value: discountValue,
+        min_fare: minFare,
+        max_discount: maxDiscount,
+        valid_from: validFrom,
+        valid_until: validUntil,
+      });
+      actions.refresh();
+      actions.notify(`Coupon ${code} created.`);
+    },
+  });
+}
+
+export function uploadCreativeAsset(actions: ScreenProps["actions"]) {
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = "image/png,image/jpeg,image/webp";
+  fileInput.onchange = async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      actions.notify("Choose an image file up to 5 MB.");
+      return;
+    }
+    const form = new FormData();
+    form.set("file", file);
+    form.set("name", file.name.replace(/\.[^/.]+$/, ""));
+    try {
+      await api("/admin/creative-assets", {
+        method: "POST",
+        body: form,
+      });
+      actions.refresh();
+      actions.notify("Creative asset uploaded.");
+    } catch (err) {
+      actions.notify(
+        err instanceof Error ? err.message : "Failed to upload asset.",
+      );
+    }
+  };
+  fileInput.click();
+}
 
 export function campaignDialog(actions: ScreenProps["actions"]) {
   actions.dialog({
@@ -79,24 +196,20 @@ export function MarketingScreen({ period, actions }: ScreenProps) {
         live_campaigns: number;
         impressions: number;
         coupon_redemptions: number;
-        cashback_credited: string;
-        incentives_credited: string;
       }>,
       Page<Row>,
       Row[],
-      Page<Row>,
       Page<Row>,
     ]
   >([
     `/admin/marketing/summary?${query(period)}`,
     "/admin/campaigns?limit=50",
     "/admin/coupons",
-    "/admin/incentive-programs",
     "/admin/creative-assets",
   ]);
   if (!state.data)
     return <LoadState error={state.error} retry={actions.refresh} />;
-  const [response, campaigns, coupons, programs, assets] = state.data;
+  const [response, campaigns, coupons, assets] = state.data;
   const s = response.data;
   return (
     <>
@@ -117,79 +230,18 @@ export function MarketingScreen({ period, actions }: ScreenProps) {
             value: number(s.coupon_redemptions),
             note: "Applied discounts",
           },
-          {
-            label: "Rewards credited",
-            value: rupees(
-              Number(s.cashback_credited) + Number(s.incentives_credited),
-            ),
-            note: "Credits & incentives",
-          },
         ]}
       />
       <Tabs
-        items={[
-          "Campaigns",
-          "Customer coupons",
-          "Rider incentives",
-          "Creative library",
-        ]}
+        items={["Campaigns", "Customer coupons", "Creative library"]}
         value={tab}
         onChange={setTab}
       />
       {tab === 0 && (
         <>
-          <div className="grid marketing-grid">
-            <div className="campaign-banner">
-              <div>
-                <small>CUSTOMER APP / OFFER PREVIEW</small>
-                <h2>
-                  Big plans.
-                  <br />
-                  Small delivery fees.
-                </h2>
-                <p>
-                  {coupons[0]
-                    ? `${String(coupons[0].title || coupons[0].description || "Offer")} · code ${String(coupons[0].code)}`
-                    : "No coupon to preview yet"}
-                </p>
-              </div>
-              <div className="delivery-art">
-                <Image
-                  src="/delivery-scooter.png"
-                  width={800}
-                  height={656}
-                  alt="Orange delivery scooter carrying parcels"
-                />
-              </div>
-              <div className="banner-bottom">
-                <Badge>Campaign creative</Badge>
-                <span>Bengaluru</span>
-              </div>
-            </div>
-            <Panel
-              title="Rider incentive preview"
-              sub="Program drafts do not credit rewards"
-            >
-              <div className="spotlight">
-                <small>DRAFT · NOT AN ACTIVE REWARD</small>
-                <h2>
-                  {String(programs.items[0]?.title || "No incentive programs")}
-                </h2>
-                <p>
-                  {programs.items.length
-                    ? `${rupees(programs.items[0].reward_amount)} proposed reward · requires a qualification and credit engine`
-                    : "Create a program after the reward rules are implemented."}
-                </p>
-              </div>
-              <p className="muted">
-                The driver app receives no earned bonus from this CMS preview.
-                Claims and wallet credits stay at zero.
-              </p>
-            </Panel>
-          </div>
           <Panel
             title="Campaign schedule"
-            sub={`${campaigns.total_count} campaigns · state is stored on the backend`}
+            sub={`${campaigns.total_count} campaigns`}
             action={
               <Button primary onClick={() => campaignDialog(actions)}>
                 Create campaign
@@ -258,6 +310,11 @@ export function MarketingScreen({ period, actions }: ScreenProps) {
         <Panel
           title="Customer coupons"
           sub="FLAT and PERCENT fare discounts · cashback is a separate wallet feature"
+          action={
+            <Button primary onClick={() => couponDialog(actions)}>
+              Create coupon
+            </Button>
+          }
         >
           <Table
             heads={[
@@ -278,6 +335,21 @@ export function MarketingScreen({ period, actions }: ScreenProps) {
                 <Badge orange={Boolean(r.is_active)}>
                   {r.is_active ? "Enabled" : "Disabled"}
                 </Badge>
+                <TextButton
+                  onClick={() =>
+                    actions.inspect(
+                      String(r.code || "Coupon"),
+                      `/admin/coupons/${r.id}`,
+                    )
+                  }
+                >
+                  View{" "}
+                  <ArrowUpRight
+                    size={14}
+                    strokeWidth={1.8}
+                    aria-hidden="true"
+                  />
+                </TextButton>
                 <TextButton
                   onClick={() =>
                     attempt(actions, async () => {
@@ -302,27 +374,16 @@ export function MarketingScreen({ period, actions }: ScreenProps) {
       )}
       {tab === 2 && (
         <Panel
-          title="Rider incentive programs"
-          sub="Draft definitions only · no claims or wallet credit engine"
-        >
-          <Table
-            heads={["Program", "Proposed reward", "Claims", "Status"]}
-            rows={programs.items.map((r) => [
-              <Cell key="c" title={String(r.title)} sub={String(r.code)} />,
-              rupees(r.reward_amount),
-              number(r.claims_count),
-              <Badge key="s">{label(r.status)}</Badge>,
-            ])}
-          />
-        </Panel>
-      )}
-      {tab === 3 && (
-        <Panel
           title="Creative library"
           sub="Only assets with a usable URL can be previewed"
+          action={
+            <Button primary onClick={() => uploadCreativeAsset(actions)}>
+              Upload asset
+            </Button>
+          }
         >
           <Table
-            heads={["Asset", "Type", "Preview"]}
+            heads={["Asset", "Type", "Preview", "Actions"]}
             rows={assets.items.map((r) => [
               String(r.name),
               String(r.content_type),
@@ -343,6 +404,18 @@ export function MarketingScreen({ period, actions }: ScreenProps) {
               ) : (
                 "Metadata only · no uploaded image"
               ),
+              <TextButton
+                key="v"
+                onClick={() =>
+                  actions.inspect(
+                    String(r.name || "Asset"),
+                    `/admin/creative-assets/${r.id}`,
+                  )
+                }
+              >
+                Inspect{" "}
+                <ArrowUpRight size={14} strokeWidth={1.8} aria-hidden="true" />
+              </TextButton>,
             ])}
           />
         </Panel>

@@ -52,7 +52,7 @@ export function Modal({
         }
       }}
     >
-      <div className="panel-heading">
+      <div className="panel-heading modal-heading">
         <h2>{value.title}</h2>
         <button
           autoFocus
