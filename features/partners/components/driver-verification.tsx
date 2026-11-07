@@ -35,6 +35,10 @@ type Document = {
   rejection_reason: string | null;
   has_front?: boolean;
   has_back?: boolean;
+  /** Short-lived signed links; present only for admins with kyc.review. */
+  front_url?: string | null;
+  back_url?: string | null;
+  urls_expire_at?: string | null;
 };
 type Bank = {
   id: string;
@@ -44,6 +48,8 @@ type Bank = {
 };
 type Vehicle = {
   id: string;
+  /** Needed to approve the assignment; the vehicle id is not accepted there. */
+  assignment_id?: string | null;
   registration_number: string;
   make: string;
   model: string;
@@ -60,6 +66,38 @@ type DriverReview = {
   vehicles: Vehicle[];
   eligibility: { online_allowed: boolean; reasons: string[] };
 };
+
+/** Only web links open in a browser; storage-internal schemes such as local:// do not. */
+function browserUrl(url: string | null | undefined): string | null {
+  return url && /^https?:\/\//i.test(url) ? url : null;
+}
+
+function DocumentImages({ doc }: { doc: Document }) {
+  const links = [
+    { name: "Front", url: browserUrl(doc.front_url), uploaded: doc.has_front },
+    { name: "Back", url: browserUrl(doc.back_url), uploaded: doc.has_back },
+  ].filter((link) => link.url || link.uploaded);
+  if (links.length === 0) return <>—</>;
+  return (
+    <span>
+      {links.map((link, index) =>
+        link.url ? (
+          <span key={link.name}>
+            {index > 0 ? " · " : null}
+            <a href={link.url} target="_blank" rel="noopener noreferrer">
+              {link.name}
+            </a>
+          </span>
+        ) : (
+          <span key={link.name} className="muted">
+            {index > 0 ? " · " : null}
+            {link.name} unavailable
+          </span>
+        ),
+      )}
+    </span>
+  );
+}
 
 function reviewDecision(
   actions: Actions,
@@ -280,6 +318,8 @@ export function DriverReviewPanel({
   const submitted = ["SUBMITTED", "UNDER_REVIEW"].includes(
     review.onboarding_status,
   );
+  // An approved or rejected application has no further onboarding decision.
+  const decided = ["APPROVED", "REJECTED"].includes(review.onboarding_status);
   const documents = [...review.documents, ...review.vehicle_documents];
   return (
     <Panel
@@ -308,16 +348,17 @@ export function DriverReviewPanel({
       }
     >
       <p className="muted">
-        Document images cannot currently be viewed in this panel. Review the
-        evidence separately before recording a decision.
+        Document images open in a new tab through short-lived links. Reopen the
+        review if a link has expired.
       </p>
       <h3>Documents</h3>
       <Table
-        heads={["Document", "Reference", "Expiry", "Status"]}
+        heads={["Document", "Reference", "Expiry", "Images", "Status"]}
         rows={documents.map((doc) => [
           label(doc.document_type),
           doc.identifier_masked || "—",
           doc.expiry_date || "—",
+          <DocumentImages key={`${doc.id}-img`} doc={doc} />,
           <Badge key={doc.id}>{label(doc.verification_status)}</Badge>,
         ])}
         empty="No documents submitted."
@@ -346,15 +387,25 @@ export function DriverReviewPanel({
           vehicle.registration_number,
           label(vehicle.status),
           label(vehicle.assignment_status),
-          vehicle.assignment_status === "PENDING" ? (
+          vehicle.assignment_status !== "PENDING" ? (
+            "—"
+          ) : vehicle.assignment_id ? (
             <TextButton
               key="appr"
-              onClick={() => approveAssignmentDialog(actions, vehicle.id)}
+              onClick={() =>
+                approveAssignmentDialog(actions, vehicle.assignment_id!)
+              }
             >
               Approve assignment
             </TextButton>
+          ) : review.onboarding_status !== "APPROVED" ? (
+            <span key="appr" className="muted">
+              Activates when onboarding is approved
+            </span>
           ) : (
-            "—"
+            <span key="appr" className="muted">
+              Assignment id unavailable
+            </span>
           ),
         ])}
         empty="No vehicle registered."
@@ -390,7 +441,9 @@ export function DriverReviewPanel({
       <p className="muted">
         {submitted
           ? "This application is awaiting review."
-          : `This application is ${label(review.onboarding_status)}. The driver must submit it before an onboarding decision can be made.`}
+          : decided
+            ? `This application is ${label(review.onboarding_status)}.`
+            : `This application is ${label(review.onboarding_status)}. The driver must submit it before an onboarding decision can be made.`}
       </p>
       {review.eligibility.reasons.length > 0 && (
         <p className="muted">
@@ -399,25 +452,27 @@ export function DriverReviewPanel({
           check eligibility again when approving.
         </p>
       )}
-      <div className="actions">
-        <Button
-          primary
-          disabled={!submitted}
-          onClick={() =>
-            onboardingDecision(actions, driverId, driverName, "approve")
-          }
-        >
-          Approve onboarding
-        </Button>
-        <Button
-          disabled={!submitted}
-          onClick={() =>
-            onboardingDecision(actions, driverId, driverName, "reject")
-          }
-        >
-          Reject onboarding
-        </Button>
-      </div>
+      {decided ? null : (
+        <div className="actions">
+          <Button
+            primary
+            disabled={!submitted}
+            onClick={() =>
+              onboardingDecision(actions, driverId, driverName, "approve")
+            }
+          >
+            Approve onboarding
+          </Button>
+          <Button
+            disabled={!submitted}
+            onClick={() =>
+              onboardingDecision(actions, driverId, driverName, "reject")
+            }
+          >
+            Reject onboarding
+          </Button>
+        </div>
+      )}
     </Panel>
   );
 }

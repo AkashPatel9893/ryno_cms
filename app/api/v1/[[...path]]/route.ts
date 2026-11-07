@@ -1,5 +1,5 @@
 const BACKEND_BASE = (
-  process.env.BACKEND_API_URL || "http://localhost:8000"
+  process.env.BACKEND_API_URL || "https://54-252-167-25.sslip.io"
 ).replace(/\/+$/, "");
 
 type Context = { params: Promise<{ path?: string[] }> };
@@ -31,6 +31,8 @@ async function route(request: Request, context: Context) {
     const backendResponse = await fetch(targetUrl, init);
     const responseHeaders = new Headers(backendResponse.headers);
     responseHeaders.delete("content-encoding");
+    // fetch may decompress the body, so the upstream byte count is no longer valid.
+    responseHeaders.delete("content-length");
 
     return new Response(backendResponse.body, {
       status: backendResponse.status,

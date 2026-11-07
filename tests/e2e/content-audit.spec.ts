@@ -64,9 +64,17 @@ test("support status filters use the API and do not invent a hotline or totals",
       });
     if (url.pathname.endsWith("/alerts"))
       return route.fulfill({ json: { items: [] } });
-    if (url.pathname.endsWith("/support/tickets")) {
+    if (url.pathname.endsWith("/support/inbox")) {
       paths.push(url.search);
-      return route.fulfill({ json: [] });
+      return route.fulfill({
+        json: {
+          items: [],
+          next_cursor: null,
+          total_count: 0,
+          as_of: "2026-11-03T00:00:00Z",
+          status_counts: {},
+        },
+      });
     }
     if (url.pathname.endsWith("/support/chats/queue"))
       return route.fulfill({ json: [] });

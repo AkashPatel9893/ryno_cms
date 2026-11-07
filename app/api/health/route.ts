@@ -1,5 +1,5 @@
 const backendBase = (
-  process.env.BACKEND_API_URL || "http://localhost:8000"
+  process.env.BACKEND_API_URL || "https://54-252-167-25.sslip.io"
 ).replace(/\/+$/, "");
 
 export async function GET() {

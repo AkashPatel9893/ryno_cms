@@ -8,6 +8,7 @@ import {
   exportData,
   label,
   number,
+  phoneOf,
   post,
   query,
   rupees,
@@ -547,7 +548,7 @@ export function OrdersScreen({ period, actions }: ScreenProps) {
                           <>
                             {r.customer.display_name}
                             <small>
-                              {r.customer.phone || "Phone unavailable"} ·{" "}
+                              {phoneOf(r.customer)} ·{" "}
                               {r.customer.customer_type === "BUSINESS"
                                 ? "B2B"
                                 : "B2C"}
@@ -572,7 +573,7 @@ export function OrdersScreen({ period, actions }: ScreenProps) {
                       />,
                       <Cell
                         key="p"
-                        title={`${r.payment.gateway_status === "REFUNDED" ? "Refunded" : r.payment.gateway_status === "CANCELLED" ? "Not collected" : label(r.payment.status)} · ${r.payment.method ?? "No method yet"}`}
+                        title={`${r.payment.gateway_status === "REFUNDED" ? "Refunded" : r.payment.gateway_status === "CANCELLED" ? "Not collected" : label(r.payment.status)} · ${!r.payment.method || r.payment.method === "NONE" ? "No method yet" : r.payment.method}`}
                         sub={
                           r.payment.timing === "POST_DELIVERY"
                             ? "Pay on delivery"

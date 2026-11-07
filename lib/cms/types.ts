@@ -14,7 +14,8 @@ export type Order = {
     customer_number: string;
     display_name: string;
     customer_type: string;
-    phone: string;
+    phone_masked: string;
+    phone_full: string;
   };
   route: { pickup_label: string; drop_label: string; stop_count: number };
   vehicle_type: { id: string; code: string; name: string };

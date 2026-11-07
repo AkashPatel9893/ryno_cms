@@ -6,6 +6,7 @@ import {
   dateTime,
   label,
   number,
+  phoneOf,
   query,
   rupees,
   useApi,
@@ -96,7 +97,7 @@ export function DashboardScreen({ period, actions }: ScreenProps) {
                 <Cell
                   key="c"
                   title={String(r.contact_name)}
-                  sub={String(r.phone || "Phone unavailable")}
+                  sub={phoneOf(r)}
                 />,
                 label(r.reason_code),
                 String(r.message),

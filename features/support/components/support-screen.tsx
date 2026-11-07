@@ -36,6 +36,16 @@ export type SupportTicket = {
   created_at: string;
 };
 
+export type SupportInbox = {
+  items: SupportTicket[];
+  next_cursor: string | null;
+  total_count: number;
+  as_of: string;
+  status_counts: Record<string, number>;
+};
+
+const INBOX_PAGE_SIZE = 50;
+
 export type SupportMessage = {
   id: string;
   sender_type: string;
@@ -69,12 +79,34 @@ export function SupportScreen({ actions }: ScreenProps) {
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
 
   const statusFilter = statusTabs[tab];
-  const state = useApi<[SupportTicket[], QueueItem[]]>([
-    statusFilter
-      ? `/admin/support/tickets?status=${statusFilter}`
-      : "/admin/support/tickets",
+
+  // Typing in the search box asks the server only once the admin pauses.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const inboxParams = new URLSearchParams({ limit: String(INBOX_PAGE_SIZE) });
+  if (statusFilter) inboxParams.set("status", statusFilter);
+  if (category) inboxParams.set("category", category);
+  if (priority) inboxParams.set("priority", priority);
+  if (debouncedSearch) inboxParams.set("q", debouncedSearch);
+  const inboxQuery = inboxParams.toString();
+
+  const state = useApi<[SupportInbox, QueueItem[]]>([
+    `/admin/support/inbox?${inboxQuery}`,
     "/admin/support/chats/queue",
   ]);
+
+  // Pages after the first, kept apart so a filter change starts over from page one.
+  const [morePages, setMorePages] = useState<{
+    query: string;
+    items: SupportTicket[];
+    cursor: string | null;
+  }>({ query: "", items: [], cursor: null });
+  const [loadingMore, setLoadingMore] = useState(false);
+  const extra = morePages.query === inboxQuery ? morePages : null;
 
   const [activeThread, setActiveThread] = useState<SupportMessage[] | null>(
     null,
@@ -86,8 +118,31 @@ export function SupportScreen({ actions }: ScreenProps) {
   const [isInternalNote, setIsInternalNote] = useState(false);
   const [sendingReply, setSendingReply] = useState(false);
 
-  const tickets = state.data?.[0];
+  const inbox = state.data?.[0];
+  const tickets = inbox ? [...inbox.items, ...(extra?.items ?? [])] : undefined;
+  const nextCursor = extra ? extra.cursor : (inbox?.next_cursor ?? null);
   const queueItems = state.data?.[1] || [];
+
+  async function loadMore() {
+    if (!nextCursor) return;
+    setLoadingMore(true);
+    try {
+      const page = await api<SupportInbox>(
+        `/admin/support/inbox?${inboxQuery}&cursor=${encodeURIComponent(nextCursor)}`,
+      );
+      setMorePages({
+        query: inboxQuery,
+        items: [...(extra?.items ?? []), ...page.items],
+        cursor: page.next_cursor,
+      });
+    } catch (error) {
+      setThreadError(
+        error instanceof Error ? error.message : "Could not load more tickets.",
+      );
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   const selectedTicket =
     tickets?.find((t) => t.id === selectedTicketId) || null;
@@ -202,19 +257,6 @@ export function SupportScreen({ actions }: ScreenProps) {
     return <LoadState error={state.error} retry={actions.refresh} />;
   }
 
-  // Filter tickets by search, category, priority
-  const filteredTickets = (tickets || []).filter((t) => {
-    if (search) {
-      const q = search.toLowerCase();
-      const matchNumber = t.ticket_number.toLowerCase().includes(q);
-      const matchSubject = t.subject.toLowerCase().includes(q);
-      if (!matchNumber && !matchSubject) return false;
-    }
-    if (category && t.category !== category) return false;
-    if (priority && t.priority !== priority) return false;
-    return true;
-  });
-
   async function claimChat(chatId: string) {
     try {
       await post(`/admin/support/chats/${chatId}/claim`);
@@ -295,7 +337,9 @@ export function SupportScreen({ actions }: ScreenProps) {
         <>
           <Tabs
             items={statusTabs.map((status, index) =>
-              index === 0 ? "All tickets" : label(status),
+              index === 0
+                ? `All tickets${inbox ? ` (${Object.values(inbox.status_counts).reduce((sum, count) => sum + count, 0)})` : ""}`
+                : `${label(status)}${inbox?.status_counts[status] != null ? ` (${inbox.status_counts[status]})` : ""}`,
             )}
             value={tab}
             onChange={(i) => {
@@ -487,10 +531,10 @@ export function SupportScreen({ actions }: ScreenProps) {
               title="Customer & Driver Support Tickets"
               sub="Customer and rider requests, messages, and resolution"
             >
-              {tickets && tickets.length >= 200 && (
+              {inbox && (
                 <p className="muted" role="status">
-                  Showing up to 200 tickets. Search and category filters apply
-                  to the tickets shown; use the status tabs to narrow the list.
+                  Showing {tickets?.length ?? 0} of {inbox.total_count} matching
+                  tickets. Search and filters apply to every ticket.
                 </p>
               )}
               <div className="filters">
@@ -557,7 +601,7 @@ export function SupportScreen({ actions }: ScreenProps) {
                   "Created",
                   "Action",
                 ]}
-                rows={filteredTickets.map((t) => [
+                rows={(tickets ?? []).map((t) => [
                   <Cell key="t" title={t.ticket_number} sub={t.subject} />,
                   label(t.category),
                   <Badge
@@ -602,6 +646,13 @@ export function SupportScreen({ actions }: ScreenProps) {
                 ])}
                 empty="No support tickets match the current criteria."
               />
+              {nextCursor && (
+                <div className="mt-3">
+                  <Button onClick={loadMore} disabled={loadingMore}>
+                    {loadingMore ? "Loading…" : "Load more tickets"}
+                  </Button>
+                </div>
+              )}
             </Panel>
           )}
         </>

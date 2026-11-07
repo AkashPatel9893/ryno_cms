@@ -59,3 +59,9 @@ export function dateLabel(period: Period) {
     }).format(new Date(period.to))
   );
 }
+
+/** The best phone number a row carries: the full number when the backend sends it, else the masked one. */
+export function phoneOf(source: Record<string, unknown>) {
+  const value = source.phone_full || source.phone || source.phone_masked;
+  return value ? String(value) : "Phone unavailable";
+}

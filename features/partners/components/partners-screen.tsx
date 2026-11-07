@@ -8,6 +8,7 @@ import {
   dateTime,
   label,
   number,
+  phoneOf,
   post,
   query,
   rupees,
@@ -405,7 +406,7 @@ export function PartnersScreen({ period, actions }: ScreenProps) {
                       <Cell
                         key="n"
                         title={`${r.first_name} ${r.last_name || ""} · ${r.driver_number}`}
-                        sub={String(r.phone || "Phone unavailable")}
+                        sub={phoneOf(r)}
                       />,
                       vehicle
                         ? `${vehicle.name} · ${vehicle.registration_number}`
@@ -444,7 +445,7 @@ export function PartnersScreen({ period, actions }: ScreenProps) {
                       <Cell
                         key="n"
                         title={String(r.display_name)}
-                        sub={String(r.phone || "Phone unavailable")}
+                        sub={phoneOf(r)}
                       />,
                       r.customer_type === "BUSINESS"
                         ? "B2B · Business"
@@ -478,7 +479,7 @@ export function PartnersScreen({ period, actions }: ScreenProps) {
                     <Cell
                       key="e"
                       title={String(r.email || "—")}
-                      sub={String(r.phone || "Phone unavailable")}
+                      sub={phoneOf(r)}
                     />,
                     label(r.reason_code),
                     <span
@@ -540,7 +541,7 @@ export function PartnersScreen({ period, actions }: ScreenProps) {
             heads={["Name", "Contact", "Status", "Actions"]}
             rows={invitationRows.items.map((r) => [
               String(r.name),
-              String(r.phone || "Phone unavailable"),
+              phoneOf(r),
               <Badge key="b">{label(r.status)}</Badge>,
               <TextButton
                 key="v"
